@@ -1,0 +1,16 @@
+#Инициация нового git:
+git init
+
+#привязка к удаленному репозитоиу (следует казать правильный)
+git remote add origin https://github.com/Varghoth/SilentListener.git
+
+#Проверка статуса:
+git status
+
+#простой коммит:
+git add . 
+git commit -m "Описание коммита"
+
+
+# заливка на гитхаб
+git push -u origin main
