@@ -14,10 +14,27 @@ RUN apt-get update && \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
+    pulseaudio \
     xfonts-base \
-    xfonts-75dpi && \
+    xfonts-75dpi \
+    ca-certificates \
+    bzip2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+############################# Установка Firefox #############################
+# Используем --no-check-certificate для обхода ошибки сертификатов
+RUN wget --no-check-certificate -O firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US" && \
+    tar xjf firefox.tar.bz2 -C /opt/ && \
+    ln -s /opt/firefox/firefox /usr/local/bin/firefox && \
+    ln -s /opt/firefox/firefox /usr/bin/firefox && \
+    rm firefox.tar.bz2
+
+# Устанавливаем Firefox как браузер по умолчанию
+RUN update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/firefox 100 && \
+    update-alternatives --set x-www-browser /usr/bin/firefox && \
+    update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/firefox 100 && \
+    update-alternatives --set gnome-www-browser /usr/bin/firefox
 
 # Устанавливаем procps для удобства мониторинга
 RUN apt-get update && \
