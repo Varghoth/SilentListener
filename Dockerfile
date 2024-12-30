@@ -1,11 +1,10 @@
 # Используем легковесный образ Debian
 FROM debian:bullseye-slim
 
-# Обновляем систему и устанавливаем необходимые пакеты
+# Обновляем систему и устанавливаем только необходимые пакеты
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    lxde-core \
-    lxterminal \
+    xfce4 \
     tightvncserver \
     dbus-x11 \
     wget \
@@ -37,11 +36,21 @@ RUN update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/
     update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/firefox 100 && \
     update-alternatives --set gnome-www-browser /usr/bin/firefox
 
+# Настройка Firefox
+RUN mkdir -p /root/.mozilla/firefox/default-release && \
+    echo 'user_pref("browser.sessionstore.resume_from_crash", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    echo 'user_pref("browser.tabs.warnOnClose", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    echo 'user_pref("media.hardware-video-decoding.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    echo 'user_pref("gfx.webrender.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js
+
+
 # Сжатие памяти
 RUN apt-get update && \
     apt-get install -y --no-install-recommends zram-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN echo 'zram_enabled=1' >> /etc/default/zram-config
 
 # Устанавливаем procps для удобства мониторинга
 RUN apt-get update && \
@@ -54,8 +63,8 @@ RUN mkdir -p /root/.vnc && \
     echo "1234" | vncpasswd -f > /root/.vnc/passwd && \
     chmod 600 /root/.vnc/passwd
 
-# Создаем xstartup файл для запуска LXDE
-RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartlxde &" > /root/.vnc/xstartup && \
+# Создаем xstartup файл для запуска Xfce
+RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
 
 # Копируем скрипт запуска
