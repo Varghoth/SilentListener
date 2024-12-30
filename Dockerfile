@@ -1,10 +1,11 @@
 # Используем легковесный образ Debian
 FROM debian:bullseye-slim
 
-# Обновляем систему и устанавливаем только необходимые пакеты
+# Обновляем систему и устанавливаем необходимые пакеты
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    xfce4 \
+    lxde-core \
+    lxterminal \
     tightvncserver \
     dbus-x11 \
     wget \
@@ -36,6 +37,12 @@ RUN update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/
     update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/firefox 100 && \
     update-alternatives --set gnome-www-browser /usr/bin/firefox
 
+# Сжатие памяти
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends zram-tools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Устанавливаем procps для удобства мониторинга
 RUN apt-get update && \
     apt-get install -y --no-install-recommends procps && \
@@ -47,8 +54,8 @@ RUN mkdir -p /root/.vnc && \
     echo "1234" | vncpasswd -f > /root/.vnc/passwd && \
     chmod 600 /root/.vnc/passwd
 
-# Создаем xstartup файл для запуска Xfce
-RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && \
+# Создаем xstartup файл для запуска LXDE
+RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartlxde &" > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
 
 # Копируем скрипт запуска
