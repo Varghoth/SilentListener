@@ -1,0 +1,20 @@
+#Сборка
+docker build -t test_kont .
+
+#Запуск
+docker run -d -p 5901:5901 --name test_kont test_kont
+
+#Работа внутри конта через консоль
+docker exec -it test_kont bash
+
+#Остановка
+docker start test_kont
+
+#Остановка
+docker stop test_kont
+
+#Ремув (НАСТРОЙКИ СОТРУТСЯ!)
+docker rm test_kont 
+
+#Рестарт
+docker restart test_kont

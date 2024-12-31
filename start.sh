@@ -4,7 +4,10 @@
 rm -f /tmp/.X*-lock
 rm -rf /tmp/.X11-unix/X*
 
-# Запускаем PulseAudio
+# Удаляем временные файлы PulseAudio
+rm -rf /tmp/pulse-* /root/.config/pulse/*
+
+#  Запускаем PulseAudio в фоновом режиме
 pulseaudio --start
 
 # Запуск NetworkManager

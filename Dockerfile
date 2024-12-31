@@ -14,13 +14,23 @@ RUN apt-get update && \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
-    pulseaudio \
+    #pulseaudio \
     xfonts-base \
     xfonts-75dpi \
     ca-certificates \
     bzip2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+    # Установка PulseAudio
+    RUN apt-get update && apt-get install -y pulseaudio && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+    # Создание конфигурации для PulseAudio
+    RUN mkdir -p /root/.config/pulse/ && \
+    echo "autospawn = yes" > /root/.config/pulse/client.conf && \
+    echo "exit-idle-time = -1" > /root/.config/pulse/daemon.conf
+
 
 ############################# Установка Firefox #############################
 # Используем --no-check-certificate для обхода ошибки сертификатов
@@ -41,8 +51,15 @@ RUN mkdir -p /root/.mozilla/firefox/default-release && \
     echo 'user_pref("browser.sessionstore.resume_from_crash", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
     echo 'user_pref("browser.tabs.warnOnClose", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
     echo 'user_pref("media.hardware-video-decoding.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    echo 'user_pref("gfx.webrender.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js
-
+    echo 'user_pref("gfx.webrender.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js \
+    #echo 'user_pref("network.proxy.type", 1);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("network.proxy.http", "198.23.239.134");' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("network.proxy.http_port", 6540);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("network.proxy.ssl", "198.23.239.134");' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("network.proxy.ssl_port", 6540);' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1");' >> /root/.mozilla/firefox/default-release/prefs.js && \
+    #echo 'user_pref("signon.autologin.proxy", true);' >> /root/.mozilla/firefox/default-release/prefs.js \
+    echo 'user_pref("media.peerconnection.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js
 
 # Сжатие памяти
 RUN apt-get update && \
@@ -66,6 +83,16 @@ RUN mkdir -p /root/.vnc && \
 # Создаем xstartup файл для запуска Xfce
 RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
+
+# Вносим в конт настроенный профиль firefox
+#COPY firefox-profile /root/.mozilla/firefox/
+COPY fox.blocked.settings/autoconfig.js /opt/firefox/defaults/pref/autoconfig.js
+COPY fox.blocked.settings/firefox.cfg /opt/firefox/firefox.cfg
+
+# Прокси
+#ENV http_proxy=http://rzxfdusc:c6iw9ibgn9tk@198.23.239.134:6540
+#ENV https_proxy=http://rzxfdusc:c6iw9ibgn9tk@198.23.239.134:6540
+#ENV no_proxy=localhost,127.0.0.1
 
 # Копируем скрипт запуска
 COPY start.sh /usr/local/bin/start.sh
