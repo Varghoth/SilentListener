@@ -14,7 +14,6 @@ RUN apt-get update && \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
-    #pulseaudio \
     xfonts-base \
     xfonts-75dpi \
     ca-certificates \
@@ -31,6 +30,8 @@ RUN apt-get update && \
     echo "autospawn = yes" > /root/.config/pulse/client.conf && \
     echo "exit-idle-time = -1" > /root/.config/pulse/daemon.conf
 
+    # Установка vncsnapshot необходимая для захвата изображения из конта
+    RUN apt-get update && apt-get install -y vncsnapshot
 
 ############################# Установка Firefox #############################
 # Используем --no-check-certificate для обхода ошибки сертификатов
