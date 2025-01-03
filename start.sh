@@ -13,15 +13,15 @@ pulseaudio --start
 # Запуск NetworkManager
 /usr/sbin/NetworkManager &
 
+# Удаляем конфликтующие процессы панели
+killall xfce4-panel || true
+
 # Запуск Proton VPN (если требуется автоподключение)
 protonvpn-cli c --fastest &
 
 # Запускаем VNC сервер с желаемым разрешением
 export USER=root
 tightvncserver :1 -geometry 1280x720 -depth 24
-
-# Запускаем оконный менеджер
-xfce4-session &
 
 # Оставляем контейнер в рабочем состоянии
 tail -f /dev/null

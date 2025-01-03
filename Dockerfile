@@ -33,7 +33,7 @@ RUN apt-get update && \
     # Установка vncsnapshot необходимая для захвата изображения из конта
     RUN apt-get update && apt-get install -y vncsnapshot
 
-############################# Установка Firefox #############################
+############################# [START] Установка Firefox #############################
 # Используем --no-check-certificate для обхода ошибки сертификатов
 RUN wget --no-check-certificate -O firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US" && \
     tar xjf firefox.tar.bz2 -C /opt/ && \
@@ -53,14 +53,23 @@ RUN mkdir -p /root/.mozilla/firefox/default-release && \
     echo 'user_pref("browser.tabs.warnOnClose", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
     echo 'user_pref("media.hardware-video-decoding.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
     echo 'user_pref("gfx.webrender.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js \
-    #echo 'user_pref("network.proxy.type", 1);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("network.proxy.http", "198.23.239.134");' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("network.proxy.http_port", 6540);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("network.proxy.ssl", "198.23.239.134");' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("network.proxy.ssl_port", 6540);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1");' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    #echo 'user_pref("signon.autologin.proxy", true);' >> /root/.mozilla/firefox/default-release/prefs.js \
     echo 'user_pref("media.peerconnection.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js
+
+############################# [END] Установка Firefox #############################
+
+############################# [START] Установка DCA #############################
+# Установка только необходимых зависимостей
+RUN apt-get update && apt-get install -y \
+    python3-pyqt5 \
+    python3-pip \
+    tesseract-ocr \
+    && apt-get clean
+
+# Копируем код DCA
+#COPY DCA /app/DCA
+#WORKDIR /app/DCA
+
+############################# [END] Установка DCA #############################
 
 # Сжатие памяти
 RUN apt-get update && \
@@ -86,18 +95,15 @@ RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup
     chmod +x /root/.vnc/xstartup
 
 # Вносим в конт настроенный профиль firefox
-#COPY firefox-profile /root/.mozilla/firefox/
 COPY fox.blocked.settings/autoconfig.js /opt/firefox/defaults/pref/autoconfig.js
 COPY fox.blocked.settings/firefox.cfg /opt/firefox/firefox.cfg
-
-# Прокси
-#ENV http_proxy=http://rzxfdusc:c6iw9ibgn9tk@198.23.239.134:6540
-#ENV https_proxy=http://rzxfdusc:c6iw9ibgn9tk@198.23.239.134:6540
-#ENV no_proxy=localhost,127.0.0.1
 
 # Копируем скрипт запуска
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
+
+# Глобальные переменные
+ENV DISPLAY=:1
 
 # Устанавливаем команду запуска
 CMD ["/usr/local/bin/start.sh"]

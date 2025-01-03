@@ -1,0 +1,8 @@
+#Вход в консоль конта
+docker exec -it test_kont bash
+
+#Копирование DCA в конт
+docker cp DCA test_kont:/app/DCA
+
+#Запуск приложения
+python3 app/DCA/agent.py
