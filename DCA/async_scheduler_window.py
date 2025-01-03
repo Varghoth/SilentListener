@@ -4,11 +4,13 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import logging
-
+import json
+import os
 
 class AsyncSchedulerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.dca_root = os.path.join(os.path.dirname(__file__), "..", "DCA") # Определяем корневой каталог DCA
         self.resize(700, 300)  # Увеличиваем ширину окна
 
         # Логирование
@@ -62,6 +64,9 @@ class AsyncSchedulerWindow(QMainWindow):
 
         # Добавляем контейнер с кнопками
         layout.addLayout(button_layout)
+
+        # Загружаем задачи из файла при запуске
+        self.load_tasks()
 
     def set_column_widths(self):
         """Устанавливает ширину столбцов в процентах от ширины окна."""
@@ -143,14 +148,74 @@ class AsyncSchedulerWindow(QMainWindow):
         logging.info(f"Строка {row + 1} удалена.")
 
     def load_tasks(self):
-        """Логика загрузки задач."""
-        logging.info("Загрузка задач...")
-        # Здесь добавить логику загрузки задач из файла
+        """Загружает задачи из файла tasks.json, если он существует, и заменяет текущие задачи."""
+        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
+
+        if not os.path.exists(tasks_file_path):
+            logging.info(f"Файл {tasks_file_path} не найден. Пропускаем загрузку задач.")
+            return
+
+        try:
+            with open(tasks_file_path, "r", encoding="utf-8") as file:
+                tasks = json.load(file)
+                logging.info(f"Задачи успешно загружены из {tasks_file_path}")
+        except Exception as e:
+            logging.error(f"Ошибка при загрузке задач из {tasks_file_path}: {e}")
+            return
+
+        # Очищаем таблицу перед загрузкой новых данных
+        self.task_table.setRowCount(0)
+
+        # Заполняем таблицу задач
+        for task in tasks:
+            self.add_task_row()
+            row_count = self.task_table.rowCount() - 1
+
+            # Устанавливаем состояние автозапуска
+            auto_start_checkbox = self.task_table.cellWidget(row_count, 0)
+            if auto_start_checkbox and "auto_start" in task:
+                auto_start_checkbox.setChecked(task["auto_start"])
+
+            # Устанавливаем путь к скрипту
+            script_widget = self.task_table.cellWidget(row_count, 2)
+            if script_widget and "script_path" in task:
+                script_input = script_widget.layout().itemAt(0).widget()
+                if script_input:
+                    script_input.setText(task["script_path"])
 
     def save_tasks(self):
-        """Логика сохранения задач."""
-        logging.info("Сохранение задач...")
-        # Здесь добавить логику сохранения задач в файл
+        """Сохраняет текущую конфигурацию задач в файл JSON в каталоге DCA."""
+        tasks = []
+
+        for row in range(self.task_table.rowCount()):
+            # Извлечение данных из столбцов
+            auto_start_checkbox = self.task_table.cellWidget(row, 0)
+            run_button = self.task_table.cellWidget(row, 1)
+            script_widget = self.task_table.cellWidget(row, 2)
+
+            # Получаем состояние автозапуска
+            auto_start = auto_start_checkbox.isChecked() if auto_start_checkbox else False
+
+            # Получаем путь к скрипту
+            script_input = script_widget.layout().itemAt(0).widget() if script_widget else None
+            script_path = script_input.text() if script_input else ""
+
+            # Добавляем задачу в список
+            tasks.append({
+                "auto_start": auto_start,
+                "script_path": script_path
+            })
+
+        # Путь к файлу tasks.json в каталоге DCA
+        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
+
+        # Сохраняем список задач в файл JSON
+        try:
+            with open(tasks_file_path, "w", encoding="utf-8") as file:
+                json.dump(tasks, file, indent=4, ensure_ascii=False)
+            logging.info(f"Конфигурация успешно сохранена в {tasks_file_path}")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении задач в {tasks_file_path}: {e}")
 
     def start_all_tasks(self):
         """Запуск всех задач."""
