@@ -115,7 +115,7 @@ class AsyncSchedulerWindow(QMainWindow):
         layout.addWidget(script_input)
 
         # Кнопка выбора файла
-        select_button = QPushButton("📂")
+        select_button = QPushButton("...")
         select_button.setFixedSize(30, 30)
         select_button.clicked.connect(lambda: self.select_script_file(script_input))
         layout.addWidget(select_button)
@@ -300,5 +300,33 @@ class AsyncSchedulerWindow(QMainWindow):
             QCheckBox::indicator:checked {
                 border: 2px solid rgb(255, 215, 0); /* Золотая рамка */
                 background-color: rgb(255, 215, 0); /* Золотой фон */
+            }
+            QLabel, QLineEdit {
+                color: rgb(255, 215, 0); /* Медово-золотой текст */
+                background-color: rgb(35, 35, 35); /* Тёмный фон */
+            }
+            QComboBox {
+                color: rgb(255, 215, 0);
+                background-color: rgb(45, 45, 45);
+            }
+            QListView, QTreeView {
+                color: rgb(255, 215, 0);
+                background-color: rgb(35, 35, 35);
+            }
+            QPushButton {
+                color: rgb(255, 215, 0);
+                background-color: rgb(45, 45, 45);
+                border: 1px solid rgb(255, 215, 0);
+            }
+            QPushButton:hover {
+                background-color: rgb(255, 215, 0);
+                color: rgb(0, 0, 0);
+            }
+            QHeaderView::section {
+                background-color: rgb(45, 45, 45);
+                color: rgb(255, 215, 0);
+            }
+            QScrollBar {
+                background-color: rgb(35, 35, 35);
             }
         """)
