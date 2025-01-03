@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (
     QCheckBox, QFileDialog, QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QColor  # Добавляем правильный импорт QPalette и QColor
 import logging
 import json
 import os
@@ -12,6 +13,7 @@ class AsyncSchedulerWindow(QMainWindow):
         super().__init__()
         self.dca_root = os.path.join(os.path.dirname(__file__), "..", "DCA") # Определяем корневой каталог DCA
         self.resize(700, 300)  # Увеличиваем ширину окна
+        self.apply_dark_theme()  # Применяем темную тему
 
         # Логирование
         logging.info("Инициализация окна планировщика")
@@ -97,7 +99,7 @@ class AsyncSchedulerWindow(QMainWindow):
 
         # Удаление строки (кнопка)
         delete_button = QPushButton("X")
-        delete_button.setStyleSheet("color: black;")
+        delete_button.setStyleSheet("color: gold;")
         delete_button.clicked.connect(lambda: self.delete_task_row(row_count))
         self.task_table.setCellWidget(row_count, 3, delete_button)
 
@@ -231,3 +233,72 @@ class AsyncSchedulerWindow(QMainWindow):
         """Обновляет ширину столбцов при изменении размера окна."""
         super().resizeEvent(event)
         self.set_column_widths()
+
+    def apply_dark_theme(self):
+        """Применяет тёмную тему с медово-золотыми элементами к интерфейсу."""
+        dark_palette = QPalette()
+
+        # Настройка цветов
+        dark_palette.setColor(QPalette.Window, QColor(35, 35, 35))
+        dark_palette.setColor(QPalette.WindowText, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+        dark_palette.setColor(QPalette.AlternateBase, QColor(35, 35, 35))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.Text, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.Button, QColor(45, 45, 45))
+        dark_palette.setColor(QPalette.ButtonText, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
+        dark_palette.setColor(QPalette.Highlight, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
+
+        # Применяем палитру
+        self.setPalette(dark_palette)
+
+        # Стилизация через CSS
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: rgb(35, 35, 35);
+            }
+            QLabel, QTableWidget, QHeaderView::section {
+                color: rgb(255, 215, 0);  /* Медово-золотой */
+            }
+            QPushButton {
+                background-color: rgb(45, 45, 45);
+                color: rgb(255, 215, 0);  /* Медово-золотой */
+                border: 1px solid rgb(255, 215, 0);  /* Золотая рамка */
+            }
+            QPushButton:hover {
+                background-color: rgb(255, 215, 0);
+                color: rgb(0, 0, 0);  /* Чёрный текст */
+            }
+            QLineEdit, QTimeEdit {
+                background-color: rgb(25, 25, 25);
+                color: rgb(255, 215, 0);  /* Медово-золотой */
+                border: 1px solid rgb(45, 45, 45);
+            }
+            QTableWidget {
+                background-color: rgb(25, 25, 25);
+                color: rgb(255, 215, 0);  /* Медово-золотой */
+                gridline-color: rgb(45, 45, 45);
+            }
+            QWidget {
+                background-color: rgb(35, 35, 35);
+            }
+            QCheckBox {
+                color: rgb(255, 215, 0); /* Медово-золотой цвет текста */
+                spacing: 5px; /* Расстояние между флажком и текстом */
+            }
+            QCheckBox::indicator {
+                width: 18px; /* Ширина флажка */
+                height: 18px; /* Высота флажка */
+            }
+            QCheckBox::indicator:unchecked {
+                border: 2px solid rgb(255, 215, 0); /* Золотая рамка */
+                background-color: rgb(45, 45, 45); /* Тёмный фон */
+            }
+            QCheckBox::indicator:checked {
+                border: 2px solid rgb(255, 215, 0); /* Золотая рамка */
+                background-color: rgb(255, 215, 0); /* Золотой фон */
+            }
+        """)
