@@ -17,7 +17,8 @@ RUN apt-get update && \
     xfonts-base \
     xfonts-75dpi \
     ca-certificates \
-    bzip2 && \
+    bzip2 \
+    arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -97,6 +98,13 @@ RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup
 # Вносим в конт настроенный профиль firefox
 COPY fox.blocked.settings/autoconfig.js /opt/firefox/defaults/pref/autoconfig.js
 COPY fox.blocked.settings/firefox.cfg /opt/firefox/firefox.cfg
+
+# Установка темы Arc-Dark
+RUN echo '#!/bin/sh\n\
+sleep 2\n\
+xfconf-query -c xsettings -p /Net/ThemeName -s "Arc-Dark"\n\
+xfconf-query -c xsettings -p /Net/IconThemeName -s "elementary"' > /root/.vnc/apply-theme.sh && \
+    chmod +x /root/.vnc/apply-theme.sh
 
 # Копируем скрипт запуска
 COPY start.sh /usr/local/bin/start.sh

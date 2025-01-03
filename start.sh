@@ -23,5 +23,8 @@ protonvpn-cli c --fastest &
 export USER=root
 tightvncserver :1 -geometry 1280x720 -depth 24
 
+# Применяем тему Arc-Dark
+/root/.vnc/apply-theme.sh
+
 # Оставляем контейнер в рабочем состоянии
 tail -f /dev/null
