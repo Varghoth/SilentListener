@@ -6,20 +6,11 @@ from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import QPalette, QColor, QIcon, QRegExpValidator  # Добавляем правильный импорт QPalette и QColor
 
 from modules.script_actions import ScriptActions
+from modules.task_manager import start_task_thread, stop_task_thread, stop_all_threads
 
-import threading
-import asyncio
 import logging
 import json
 import os
-
-threads = {}  # Словарь для отслеживания активных потоков
-
-def run_asyncio_event_loop():
-    """Запускает цикл событий asyncio в отдельном потоке."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
 
 class LogWindow(QDialog):
     """Окно для отображения логов."""
@@ -62,7 +53,6 @@ class LogHandler(logging.Handler):
 
 class AsyncSchedulerWindow(QMainWindow):
     def __init__(self):
-        threading.Thread(target=run_asyncio_event_loop, daemon=True).start()
         super().__init__()
         self.dca_root = os.path.join(os.path.dirname(__file__), "..", "DCA") # Определяем корневой каталог DCA
         self.script_actions = ScriptActions()  # Создаем экземпляр ScriptActions один раз
@@ -232,7 +222,6 @@ class AsyncSchedulerWindow(QMainWindow):
             else:
                 run_button.setText("▷")  # Меняем значок на "Play"
                 logging.info(f"Задача {row + 1}: Остановка скрипта {script_path}")
-
 
     def delete_task_row(self, row):
         """Удаляет выбранную строку."""
@@ -477,53 +466,3 @@ class AsyncSchedulerWindow(QMainWindow):
                 self.task_table.cellWidget(next_row, 3).setStyleSheet("border: 2px solid red;")
             else:
                 self.task_table.cellWidget(next_row, 3).setStyleSheet("")
-    
-    async def toggle_task(self, button, row):
-        """Переключение состояния задачи: запуск или остановка."""
-        script_widget = self.task_table.cellWidget(row, 2)
-        if script_widget:
-            script_input = script_widget.layout().itemAt(0).widget()
-            script_path = script_input.text()
-
-            if not script_path:
-                logging.warning(f"Скрипт не указан для строки {row + 1}")
-                return
-            
-            if button.text() == "▷":  # Если текущий символ Play
-                button.setText("☐")  # Меняем на Stop
-                logging.info(f"Запуск скрипта: {script_path}")
-                #asyncio.ensure_future(self.execute_script(script_path, button))
-                #await self.execute_script(script_path, self.task_table.cellWidget(row, 1))
-            else:
-                button.setText("▷")  # Меняем обратно на Play
-                logging.info(f"Остановка скрипта: {script_path}")
-
-    async def execute_script(self, script_path):
-        """Асинхронное выполнение скрипта."""
-        try:
-            logging.info(f"[EXECUTE_SCRIPT] Начало выполнения скрипта: {script_path}")
-            with open(script_path, 'r', encoding='utf-8') as file:
-                script = json.load(file)
-
-            for block in script.get("blocks", []):
-                logging.info(f"[BLOCK] Выполнение блока: {block.get('name', 'Без имени')}")
-                for step in block.get("steps", []):
-                    action = step.get("action")
-                    params = step.get("params", {})
-                    if action in actions:
-                        await actions[action](params)
-                    else:
-                        logging.error(f"[UNKNOWN_ACTION] Неизвестное действие: {action}")
-            logging.info(f"[EXECUTE_SCRIPT] Скрипт {script_path} успешно завершён.")
-        except Exception as e:
-            logging.error(f"[EXECUTE_SCRIPT] Ошибка выполнения скрипта {script_path}: {e}")
-
-    def start_script(script_path):
-        """Запуск скрипта в отдельном потоке."""
-        if script_path in threads and threads[script_path].is_alive():
-            logging.warning(f"[START_SCRIPT] Скрипт {script_path} уже выполняется.")
-            return
-
-        thread = threading.Thread(target=lambda: asyncio.run(execute_script(script_path)), daemon=True)
-        threads[script_path] = thread
-        thread.start()
