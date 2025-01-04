@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import QPalette, QColor, QIcon, QRegExpValidator  # Добавляем правильный импорт QPalette и QColor
 
 from modules.script_actions import ScriptActions
-from modules.task_manager import start_task_thread, stop_task_thread, stop_all_threads
+from modules.task_manager import TaskManager
 
 import logging
 import json
@@ -58,7 +58,8 @@ class AsyncSchedulerWindow(QMainWindow):
         self.script_actions = ScriptActions()  # Создаем экземпляр ScriptActions один раз
         self.resize(700, 300)  # Увеличиваем ширину окна
         self.apply_dark_theme()  # Применяем темную тему
-        
+        self.task_manager = TaskManager()  # Подключаем TaskManager
+
         # Устанавливаем путь к иконке
         icon_path = os.path.join(self.dca_root, "assets", "icon.png")
         self.setWindowIcon(QIcon(icon_path))  # Устанавливаем пользовательскую иконку
@@ -130,6 +131,8 @@ class AsyncSchedulerWindow(QMainWindow):
         if self.show_logs:
             self.log_window.show()
 
+############################### [START] Окно Планировщика ###############################
+
     def set_column_widths(self):
         """Устанавливает ширину столбцов в процентах от ширины окна."""
         column_widths = [3, 4, 72, 9, 9, 2]  # Процентное соотношение ширины столбцов
@@ -149,9 +152,14 @@ class AsyncSchedulerWindow(QMainWindow):
         self.task_table.setCellWidget(row_count, 0, auto_start_checkbox)
 
         # Запуск скрипта (кнопка)
+        run_button_container = QWidget()
+        run_button_layout = QHBoxLayout()
+        run_button_layout.setContentsMargins(0, 0, 0, 0)
         run_button = QPushButton("▷")
-        run_button.clicked.connect(lambda: self.run_task(row_count))  # Подключаем упрощённый метод
-        self.task_table.setCellWidget(row_count, 1, run_button)
+        run_button.clicked.connect(lambda: self.run_task(row_count))  # Подключаем метод для обработки
+        run_button_layout.addWidget(run_button)
+        run_button_container.setLayout(run_button_layout)
+        self.task_table.setCellWidget(row_count, 1, run_button_container)
 
         # Выбор скрипта (текстовый ввод + выбор файла)
         script_widget = self.create_script_widget()
@@ -175,6 +183,8 @@ class AsyncSchedulerWindow(QMainWindow):
         delete_button = QPushButton("✖")
         delete_button.clicked.connect(lambda: self.delete_task_row(row_count))
         self.task_table.setCellWidget(row_count, 5, delete_button)
+
+        logging.info(f"[UI] Добавлена задача в строку {row_count}")
 
     def create_script_widget(self):
         # Создаем контейнер для текстового ввода и кнопки выбора файла
@@ -204,134 +214,10 @@ class AsyncSchedulerWindow(QMainWindow):
         if file_path:
             line_edit.setText(file_path)
 
-    def run_task(self, row):
-        """Запуск задачи: вывод сообщения в лог и смена значка кнопки."""
-        script_widget = self.task_table.cellWidget(row, 2)
-        run_button = self.task_table.cellWidget(row, 1)
-        if script_widget:
-            script_input = script_widget.layout().itemAt(0).widget()
-            script_path = script_input.text()
-
-            if not script_path:
-                logging.warning(f"Скрипт не указан для строки {row + 1}")
-                return
-
-            if run_button.text() == "▷":  # Если кнопка показывает "Play"
-                run_button.setText("☐")  # Меняем значок на "Stop"
-                logging.info(f"Задача {row + 1}: Запуск скрипта {script_path}")
-            else:
-                run_button.setText("▷")  # Меняем значок на "Play"
-                logging.info(f"Задача {row + 1}: Остановка скрипта {script_path}")
-
     def delete_task_row(self, row):
         """Удаляет выбранную строку."""
         self.task_table.removeRow(row)
         logging.info(f"Строка {row + 1} удалена.")
-
-    def load_tasks(self):
-        """Загружает задачи из файла tasks.json, если он существует, и заменяет текущие задачи."""
-        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
-
-        if not os.path.exists(tasks_file_path):
-            logging.info(f"Файл {tasks_file_path} не найден. Пропускаем загрузку задач.")
-            return
-
-        try:
-            with open(tasks_file_path, "r", encoding="utf-8") as file:
-                tasks = json.load(file)
-                logging.info(f"Задачи успешно загружены из {tasks_file_path}")
-        except Exception as e:
-            logging.error(f"Ошибка при загрузке задач из {tasks_file_path}: {e}")
-            return
-
-        # Очищаем таблицу перед загрузкой новых данных
-        self.task_table.setRowCount(0)
-
-        # Заполняем таблицу задач
-        for task in tasks:
-            self.add_task_row()
-            row_count = self.task_table.rowCount() - 1
-
-            # Устанавливаем состояние автозапуска
-            auto_start_checkbox = self.task_table.cellWidget(row_count, 0)
-            if auto_start_checkbox and "auto_start" in task:
-                auto_start_checkbox.setChecked(task["auto_start"])
-
-            # Устанавливаем путь к скрипту
-            script_widget = self.task_table.cellWidget(row_count, 2)
-            if script_widget and "script_path" in task:
-                script_input = script_widget.layout().itemAt(0).widget()
-                if script_input:
-                    script_input.setText(task["script_path"])
-
-            # Устанавливаем время начала выполнения
-            start_time_input = self.task_table.cellWidget(row_count, 3)
-            if start_time_input and "start_time" in task:
-                start_time_input.setText(task["start_time"])
-
-            # Устанавливаем время окончания выполнения
-            end_time_input = self.task_table.cellWidget(row_count, 4)
-            if end_time_input and "end_time" in task:
-                end_time_input.setText(task["end_time"])
-
-    def save_tasks(self):
-        """Сохраняет текущую конфигурацию задач в файл JSON в каталоге DCA."""
-        tasks = []
-
-        for row in range(self.task_table.rowCount()):
-            # Извлечение данных из столбцов
-            auto_start_checkbox = self.task_table.cellWidget(row, 0)
-            run_button = self.task_table.cellWidget(row, 1)
-            script_widget = self.task_table.cellWidget(row, 2)
-            start_time_input = self.task_table.cellWidget(row, 3)
-            end_time_input = self.task_table.cellWidget(row, 4)
-
-            # Получаем состояние автозапуска
-            auto_start = auto_start_checkbox.isChecked() if auto_start_checkbox else False
-
-            # Получаем путь к скрипту
-            script_input = script_widget.layout().itemAt(0).widget() if script_widget else None
-            script_path = script_input.text() if script_input else ""
-
-            # Получаем время начала и окончания выполнения
-            start_time = start_time_input.text() if start_time_input else ""
-            end_time = end_time_input.text() if end_time_input else ""
-
-            # Добавляем задачу в список
-            tasks.append({
-                "auto_start": auto_start,
-                "script_path": script_path,
-                "start_time": start_time,
-                "end_time": end_time
-            })
-
-        # Путь к файлу tasks.json в каталоге DCA
-        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
-
-        # Сохраняем список задач в файл JSON
-        try:
-            with open(tasks_file_path, "w", encoding="utf-8") as file:
-                json.dump(tasks, file, indent=4, ensure_ascii=False)
-            logging.info(f"Конфигурация успешно сохранена в {tasks_file_path}")
-        except Exception as e:
-            logging.error(f"Ошибка при сохранении задач в {tasks_file_path}: {e}")
-
-    def start_all_tasks(self):
-        """Запуск всех задач."""
-        logging.info("Запуск всех задач...")
-        # Здесь добавить логику для запуска всех задач
-
-    def stop_all_tasks(self):
-        """Остановка всех задач."""
-        logging.info("Остановка всех задач...")
-        # Здесь добавить логику для остановки всех задач
-
-    def run_autostart_tasks(self):
-        """Запускает все задачи, отмеченные для автозапуска."""
-        for row in range(self.task_table.rowCount()):
-            auto_start_checkbox = self.task_table.cellWidget(row, 0)
-            if auto_start_checkbox and auto_start_checkbox.isChecked():
-                self.run_task(row)
 
     def setup_logging(self):
         """Настраивает логирование для приложения."""
@@ -466,3 +352,178 @@ class AsyncSchedulerWindow(QMainWindow):
                 self.task_table.cellWidget(next_row, 3).setStyleSheet("border: 2px solid red;")
             else:
                 self.task_table.cellWidget(next_row, 3).setStyleSheet("")
+
+############################### [-END-] Окно Планировщика ###############################
+
+############################### [START] Задачи ###############################
+
+    def load_tasks(self):
+        """Загружает задачи из файла tasks.json, если он существует, и заменяет текущие задачи."""
+        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
+
+        if not os.path.exists(tasks_file_path):
+            logging.info(f"Файл {tasks_file_path} не найден. Пропускаем загрузку задач.")
+            return
+
+        try:
+            with open(tasks_file_path, "r", encoding="utf-8") as file:
+                tasks = json.load(file)
+                logging.info(f"Задачи успешно загружены из {tasks_file_path}")
+        except Exception as e:
+            logging.error(f"Ошибка при загрузке задач из {tasks_file_path}: {e}")
+            return
+
+        # Очищаем таблицу перед загрузкой новых данных
+        self.task_table.setRowCount(0)
+
+        # Заполняем таблицу задач
+        for task in tasks:
+            self.add_task_row()
+            row_count = self.task_table.rowCount() - 1
+
+            # Устанавливаем состояние автозапуска
+            auto_start_checkbox = self.task_table.cellWidget(row_count, 0)
+            if auto_start_checkbox and "auto_start" in task:
+                auto_start_checkbox.setChecked(task["auto_start"])
+
+            # Устанавливаем путь к скрипту
+            script_widget = self.task_table.cellWidget(row_count, 2)
+            if script_widget and "script_path" in task:
+                script_input = script_widget.layout().itemAt(0).widget()
+                if script_input:
+                    script_input.setText(task["script_path"])
+
+            # Устанавливаем время начала выполнения
+            start_time_input = self.task_table.cellWidget(row_count, 3)
+            if start_time_input and "start_time" in task:
+                start_time_input.setText(task["start_time"])
+
+            # Устанавливаем время окончания выполнения
+            end_time_input = self.task_table.cellWidget(row_count, 4)
+            if end_time_input and "end_time" in task:
+                end_time_input.setText(task["end_time"])
+
+    def save_tasks(self):
+        """Сохраняет текущую конфигурацию задач в файл JSON в каталоге DCA."""
+        tasks = []
+
+        for row in range(self.task_table.rowCount()):
+            # Извлечение данных из столбцов
+            auto_start_checkbox = self.task_table.cellWidget(row, 0)
+            run_button = self.task_table.cellWidget(row, 1)
+            script_widget = self.task_table.cellWidget(row, 2)
+            start_time_input = self.task_table.cellWidget(row, 3)
+            end_time_input = self.task_table.cellWidget(row, 4)
+
+            # Получаем состояние автозапуска
+            auto_start = auto_start_checkbox.isChecked() if auto_start_checkbox else False
+
+            # Получаем путь к скрипту
+            script_input = script_widget.layout().itemAt(0).widget() if script_widget else None
+            script_path = script_input.text() if script_input else ""
+
+            # Получаем время начала и окончания выполнения
+            start_time = start_time_input.text() if start_time_input else ""
+            end_time = end_time_input.text() if end_time_input else ""
+
+            # Добавляем задачу в список
+            tasks.append({
+                "auto_start": auto_start,
+                "script_path": script_path,
+                "start_time": start_time,
+                "end_time": end_time
+            })
+
+        # Путь к файлу tasks.json в каталоге DCA
+        tasks_file_path = os.path.join(self.dca_root, "tasks.json")
+
+        # Сохраняем список задач в файл JSON
+        try:
+            with open(tasks_file_path, "w", encoding="utf-8") as file:
+                json.dump(tasks, file, indent=4, ensure_ascii=False)
+            logging.info(f"Конфигурация успешно сохранена в {tasks_file_path}")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении задач в {tasks_file_path}: {e}")
+
+    def run_autostart_tasks(self):
+        """Запускает все задачи, отмеченные для автозапуска."""
+        for row in range(self.task_table.rowCount()):
+            auto_start_checkbox = self.task_table.cellWidget(row, 0)
+            if auto_start_checkbox and auto_start_checkbox.isChecked():
+                self.run_task(row)
+
+
+
+    def run_task(self, row):
+        """Запуск или остановка задачи."""
+        try:
+            # Получаем контейнер с кнопкой
+            run_button_widget = self.task_table.cellWidget(row, 1)
+            if not run_button_widget:
+                logging.error(f"[UI] Контейнер кнопки запуска не найден в строке {row}")
+                return
+
+            # Извлекаем кнопку из контейнера
+            layout = run_button_widget.layout()
+            if not layout or layout.count() == 0:
+                logging.error(f"[UI] Layout кнопки запуска отсутствует в строке {row}")
+                return
+
+            run_button = layout.itemAt(0).widget()
+            if not run_button:
+                logging.error(f"[UI] Кнопка запуска отсутствует в строке {row}")
+                return
+
+            # Получаем виджет для ввода пути к скрипту
+            script_widget = self.task_table.cellWidget(row, 2)
+            if not script_widget:
+                logging.error(f"[UI] Виджет для скрипта отсутствует в строке {row}")
+                return
+
+            # Извлекаем текстовое поле
+            script_input = script_widget.layout().itemAt(0).widget()
+            if not script_input:
+                logging.error(f"[UI] Поле ввода скрипта отсутствует в строке {row}")
+                return
+
+            script_path = script_input.text()
+            if not script_path:
+                logging.warning(f"[UI] Скрипт не указан для строки {row + 1}")
+                return
+
+            if run_button.text() == "▷":  # Если кнопка показывает "Play"
+                run_button.setText("☐")  # Меняем значок на "Stop"
+                logging.info(f"[UI] Задача {row + 1}: Запуск скрипта {script_path}")
+                self.start_task(script_path)
+            else:
+                run_button.setText("▷")  # Меняем значок на "Play"
+                logging.info(f"[UI] Задача {row + 1}: Остановка скрипта {script_path}")
+                self.stop_task(script_path)
+
+        except Exception as e:
+            logging.error(f"[UI] Ошибка при запуске задачи: {e}")
+
+
+
+    def start_task(self, script_path):
+        self.task_manager.start_task(script_path)
+        logging.info(f"[UI] Задача {script_path} запущена")
+    
+    def stop_task(self, script_path):
+        self.task_manager.stop_task(script_path)
+        logging.info(f"[UI] Задача {script_path} остановлена")
+
+    def start_all_tasks(self):
+        """Запуск всех задач."""
+        logging.info("Запуск всех задач...")
+        for row in range(self.task_table.rowCount()):
+            script_path = self.get_script_path(row)
+            if script_path:
+                self.start_task(script_path)
+
+    def stop_all_tasks(self):
+        """Остановка всех задач."""
+        logging.info("Остановка всех задач...")
+        # Здесь добавить логику для остановки всех задач
+
+############################### [-END-] Задачи ###############################

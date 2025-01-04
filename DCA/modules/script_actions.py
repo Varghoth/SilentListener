@@ -74,7 +74,6 @@ class ScriptActions:
         """
         return self.actions.get(action_name)
 
-
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
 

@@ -4,79 +4,85 @@ import logging
 import json
 import os
 
-# Словарь для отслеживания активных потоков
-threads = {}
+from modules.script_actions import ScriptActions
 
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
+class TaskManager:
+    def __init__(self):
+        """Инициализация менеджера задач."""
+        self.threads = {}  # Словарь для отслеживания активных потоков
+        self.actions = ScriptActions()  # Подключаем действия
+        logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
 
-# Функция для выполнения задачи
-async def execute_task(script_path):
-    try:
-        logging.info(f"[EXECUTE_TASK] Начало выполнения скрипта: {script_path}")
+    async def execute_task(self, script_path):
+        try:
+            logging.info(f"[TaskManager] Выполнение скрипта: {script_path}")
 
-        # Проверяем, существует ли скрипт
-        if not os.path.exists(script_path):
-            logging.error(f"[EXECUTE_TASK] Скрипт не найден: {script_path}")
+            if not os.path.exists(script_path):
+                logging.error(f"[TaskManager] Скрипт не найден: {script_path}")
+                return
+
+            with open(script_path, 'r', encoding='utf-8') as file:
+                script = json.load(file)
+
+            for block in script.get("blocks", []):
+                logging.info(f"[TaskManager] Выполнение блока: {block.get('name', 'Без имени')}")
+                for step in block.get("steps", []):
+                    action_name = step.get("action")
+                    params = step.get("params", {})
+                    action = self.actions.get_action(action_name)
+
+                    if action:
+                        logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                        await action(params)
+                    else:
+                        logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+
+            logging.info(f"[TaskManager] Скрипт завершён: {script_path}")
+        except Exception as e:
+            logging.error(f"[TaskManager] Ошибка выполнения скрипта {script_path}: {e}")
+
+    def start_task(self, script_path):
+        if script_path in self.threads and self.threads[script_path].is_alive():
+            logging.warning(f"[TaskManager] Задача уже выполняется: {script_path}")
             return
 
-        # Загружаем скрипт
-        with open(script_path, 'r', encoding='utf-8') as file:
-            script = json.load(file)
+        def task_runner():
+            asyncio.run(self.execute_task(script_path))
 
-        # Выполняем шаги скрипта
-        for step in script.get("steps", []):
-            action = step.get("action")
-            params = step.get("params", {})
-            logging.info(f"[EXECUTE_TASK] Выполнение действия: {action} с параметрами: {params}")
-            await asyncio.sleep(1)  # Эмуляция выполнения действия
+        thread = threading.Thread(target=task_runner, daemon=True)
+        self.threads[script_path] = thread
+        thread.start()
+        logging.info(f"[TaskManager] Задача запущена: {script_path}")
 
-        logging.info(f"[EXECUTE_TASK] Скрипт успешно завершён: {script_path}")
+    def stop_task(self, script_path):
+        thread = self.threads.get(script_path)
+        if thread and thread.is_alive():
+            logging.info(f"[TaskManager] Остановка задачи: {script_path}")
+            # Реализуйте корректное завершение задачи
+            self.threads.pop(script_path, None)
+        else:
+            logging.warning(f"[TaskManager] Задача не найдена или уже завершена: {script_path}")
 
-    except Exception as e:
-        logging.error(f"[EXECUTE_TASK] Ошибка выполнения скрипта {script_path}: {e}")
-
-# Запуск задачи в отдельном потоке
-def start_task_thread(script_path):
-    if script_path in threads and threads[script_path].is_alive():
-        logging.warning(f"[START_TASK_THREAD] Задача уже выполняется: {script_path}")
-        return
-
-    def task_runner():
-        asyncio.run(execute_task(script_path))
-
-    thread = threading.Thread(target=task_runner, daemon=True)
-    threads[script_path] = thread
-    thread.start()
-    logging.info(f"[START_TASK_THREAD] Задача запущена: {script_path}")
-
-# Остановка задачи
-def stop_task_thread(script_path):
-    thread = threads.get(script_path)
-    if thread and thread.is_alive():
-        # В реальном проекте нужно предусмотреть корректную остановку asyncio-задачи
-        logging.info(f"[STOP_TASK_THREAD] Попытка остановить задачу: {script_path}")
-        # Здесь реализовать логику остановки
-        threads.pop(script_path, None)
-    else:
-        logging.warning(f"[STOP_TASK_THREAD] Задача не найдена или уже завершена: {script_path}")
-
-# Остановка всех задач
-def stop_all_threads():
-    for script_path in list(threads.keys()):
-        stop_task_thread(script_path)
-    logging.info("[STOP_ALL_THREADS] Все задачи остановлены.")
+    def stop_all_tasks(self):
+        """
+        Остановка всех задач.
+        """
+        for script_path in list(self.threads.keys()):
+            self.stop_task(script_path)
+        logging.info("[STOP_ALL_TASKS] Все задачи остановлены.")
 
 # Пример использования
 if __name__ == "__main__":
+    manager = TaskManager()
     test_script = "test_task.json"
 
     # Тестовый запуск
-    start_task_thread(test_script)
-    start_task_thread(test_script)  # Повторный запуск для проверки
+    manager.start_task(test_script)
+    manager.start_task(test_script)  # Повторный запуск для проверки
 
     # Ждём выполнения
     import time
     time.sleep(5)
 
     # Остановка всех задач
-    stop_all_threads()
+    manager.stop_all_tasks()
