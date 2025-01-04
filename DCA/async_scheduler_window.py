@@ -99,7 +99,7 @@ class AsyncSchedulerWindow(QMainWindow):
 
         # Удаление строки (кнопка)
         delete_button = QPushButton("X")
-        delete_button.setStyleSheet("color: gold;")
+        #delete_button.setStyleSheet("color: gold;")
         delete_button.clicked.connect(lambda: self.delete_task_row(row_count))
         self.task_table.setCellWidget(row_count, 3, delete_button)
 
@@ -235,21 +235,20 @@ class AsyncSchedulerWindow(QMainWindow):
         self.set_column_widths()
 
     def apply_dark_theme(self):
-        """Применяет тёмную тему с медово-золотыми элементами к интерфейсу."""
         dark_palette = QPalette()
 
         # Настройка цветов
-        dark_palette.setColor(QPalette.Window, QColor(35, 35, 35))
-        dark_palette.setColor(QPalette.WindowText, QColor(255, 215, 0))  # Медово-золотой
-        dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
-        dark_palette.setColor(QPalette.AlternateBase, QColor(35, 35, 35))
-        dark_palette.setColor(QPalette.ToolTipBase, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.Window, QColor(64, 69, 82))
+        dark_palette.setColor(QPalette.WindowText, QColor(160, 166, 178))  # Белый
+        dark_palette.setColor(QPalette.Base, QColor(64, 69, 82))
+        dark_palette.setColor(QPalette.AlternateBase, QColor(64, 69, 82))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(160, 166, 178))  # Белый
         dark_palette.setColor(QPalette.ToolTipText, QColor(255, 255, 255))
-        dark_palette.setColor(QPalette.Text, QColor(255, 215, 0))  # Медово-золотой
-        dark_palette.setColor(QPalette.Button, QColor(45, 45, 45))
-        dark_palette.setColor(QPalette.ButtonText, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.Text, QColor(160, 166, 178))  # Белый
+        dark_palette.setColor(QPalette.Button, QColor(47, 52, 63))
+        dark_palette.setColor(QPalette.ButtonText, QColor(160, 166, 178))  # Белый
         dark_palette.setColor(QPalette.BrightText, QColor(255, 0, 0))
-        dark_palette.setColor(QPalette.Highlight, QColor(255, 215, 0))  # Медово-золотой
+        dark_palette.setColor(QPalette.Highlight, QColor(160, 166, 178))  # Белый
         dark_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
 
         # Применяем палитру
@@ -258,35 +257,35 @@ class AsyncSchedulerWindow(QMainWindow):
         # Стилизация через CSS
         self.setStyleSheet("""
             QMainWindow {
-                background-color: rgb(35, 35, 35);
+                background-color: rgb(64, 69, 82);
             }
             QLabel, QTableWidget, QHeaderView::section {
-                color: rgb(255, 215, 0);  /* Медово-золотой */
+                color: rgb(160, 166, 178);  /* Белый */
             }
             QPushButton {
-                background-color: rgb(45, 45, 45);
-                color: rgb(255, 215, 0);  /* Медово-золотой */
-                border: 1px solid rgb(255, 215, 0);  /* Золотая рамка */
+                background-color: rgb(47, 52, 63);
+                color: rgb(175, 184, 198);  /* Медово-золотой */
+                border: 1px solid rgb(175, 184, 198);  /* Золотая рамка */
             }
             QPushButton:hover {
-                background-color: rgb(255, 215, 0);
+                background-color: rgb(175, 184, 198);
                 color: rgb(0, 0, 0);  /* Чёрный текст */
             }
             QLineEdit, QTimeEdit {
                 background-color: rgb(25, 25, 25);
-                color: rgb(255, 215, 0);  /* Медово-золотой */
-                border: 1px solid rgb(45, 45, 45);
+                color: rgb(160, 166, 178);  /* Белый */
+                border: 1px solid rgb(47, 52, 63);
             }
             QTableWidget {
                 background-color: rgb(25, 25, 25);
-                color: rgb(255, 215, 0);  /* Медово-золотой */
-                gridline-color: rgb(45, 45, 45);
+                color: rgb(160, 166, 178);  /* Белый */
+                gridline-color: rgb(47, 52, 63);
             }
             QWidget {
-                background-color: rgb(35, 35, 35);
+                background-color: rgb(47, 52, 63);
             }
             QCheckBox {
-                color: rgb(255, 215, 0); /* Медово-золотой цвет текста */
+                color: rgb(160, 166, 178);  /* Белый */
                 spacing: 5px; /* Расстояние между флажком и текстом */
             }
             QCheckBox::indicator {
@@ -294,39 +293,39 @@ class AsyncSchedulerWindow(QMainWindow):
                 height: 18px; /* Высота флажка */
             }
             QCheckBox::indicator:unchecked {
-                border: 2px solid rgb(255, 215, 0); /* Золотая рамка */
-                background-color: rgb(45, 45, 45); /* Тёмный фон */
+                border: 2px solid rgb(175, 184, 198); /* Золотая рамка */
+                background-color: rgb(47, 52, 63); /* Тёмный фон */
             }
             QCheckBox::indicator:checked {
-                border: 2px solid rgb(255, 215, 0); /* Золотая рамка */
-                background-color: rgb(255, 215, 0); /* Золотой фон */
+                border: 2px solid rgb(175, 184, 198); /* Золотая рамка */
+                background-color: rgb(175, 184, 198); /* Золотой фон */
             }
             QLabel, QLineEdit {
-                color: rgb(255, 215, 0); /* Медово-золотой текст */
-                background-color: rgb(35, 35, 35); /* Тёмный фон */
+                color: rgb(175, 184, 198); /* Медово-золотой текст */
+                background-color: rgb(47, 52, 63); /* Тёмный фон */
             }
             QComboBox {
-                color: rgb(255, 215, 0);
-                background-color: rgb(45, 45, 45);
+                color: rgb(175, 184, 198);
+                background-color: rgb(47, 52, 63);
             }
             QListView, QTreeView {
-                color: rgb(255, 215, 0);
-                background-color: rgb(35, 35, 35);
+                color: rgb(175, 184, 198);
+                background-color: rgb(47, 52, 63);
             }
             QPushButton {
-                color: rgb(255, 215, 0);
-                background-color: rgb(45, 45, 45);
-                border: 1px solid rgb(255, 215, 0);
+                color: rgb(175, 184, 198);
+                background-color: rgb(47, 52, 63);
+                border: 1px solid rgb(175, 184, 198);
             }
             QPushButton:hover {
-                background-color: rgb(255, 215, 0);
+                background-color: rgb(175, 184, 198);
                 color: rgb(0, 0, 0);
             }
             QHeaderView::section {
-                background-color: rgb(45, 45, 45);
-                color: rgb(255, 215, 0);
+                background-color: rgb(47, 52, 63);
+                color: rgb(175, 184, 198);
             }
             QScrollBar {
-                background-color: rgb(35, 35, 35);
+                background-color: rgb(47, 52, 63);
             }
         """)
