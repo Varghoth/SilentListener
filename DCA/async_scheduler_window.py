@@ -7,10 +7,19 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QRegExpValidator  # Добав�
 
 from modules.script_actions import ScriptActions
 
+import threading
+import asyncio
 import logging
 import json
 import os
 
+threads = {}  # Словарь для отслеживания активных потоков
+
+def run_asyncio_event_loop():
+    """Запускает цикл событий asyncio в отдельном потоке."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
 
 class LogWindow(QDialog):
     """Окно для отображения логов."""
@@ -53,8 +62,10 @@ class LogHandler(logging.Handler):
 
 class AsyncSchedulerWindow(QMainWindow):
     def __init__(self):
+        threading.Thread(target=run_asyncio_event_loop, daemon=True).start()
         super().__init__()
         self.dca_root = os.path.join(os.path.dirname(__file__), "..", "DCA") # Определяем корневой каталог DCA
+        self.script_actions = ScriptActions()  # Создаем экземпляр ScriptActions один раз
         self.resize(700, 300)  # Увеличиваем ширину окна
         self.apply_dark_theme()  # Применяем темную тему
         
@@ -149,7 +160,7 @@ class AsyncSchedulerWindow(QMainWindow):
 
         # Запуск скрипта (кнопка)
         run_button = QPushButton("▷")
-        run_button.clicked.connect(lambda: self.run_task(row_count))
+        run_button.clicked.connect(lambda: self.run_task(row_count))  # Подключаем упрощённый метод
         self.task_table.setCellWidget(row_count, 1, run_button)
 
         # Выбор скрипта (текстовый ввод + выбор файла)
@@ -174,26 +185,6 @@ class AsyncSchedulerWindow(QMainWindow):
         delete_button = QPushButton("✖")
         delete_button.clicked.connect(lambda: self.delete_task_row(row_count))
         self.task_table.setCellWidget(row_count, 5, delete_button)
-
-    def toggle_task(self, button, row):
-        """Переключение состояния задачи: запуск или остановка."""
-        script_widget = self.task_table.cellWidget(row, 2)
-        if script_widget:
-            script_input = script_widget.layout().itemAt(0).widget()
-            script_path = script_input.text()
-
-            if not script_path:
-                logging.warning(f"Скрипт не указан для строки {row + 1}")
-                return
-
-            if button.text() == "▷":  # Если текущий символ Play
-                button.setText("☐")  # Меняем на Stop
-                logging.info(f"Запуск скрипта: {script_path}")
-                # Здесь добавьте вызов выполнения скрипта
-            else:
-                button.setText("▷")  # Меняем обратно на Play
-                logging.info(f"Остановка скрипта: {script_path}")
-                # Здесь добавьте логику остановки скрипта
 
     def create_script_widget(self):
         # Создаем контейнер для текстового ввода и кнопки выбора файла
@@ -224,17 +215,24 @@ class AsyncSchedulerWindow(QMainWindow):
             line_edit.setText(file_path)
 
     def run_task(self, row):
-        # Логика запуска скрипта
+        """Запуск задачи: вывод сообщения в лог и смена значка кнопки."""
         script_widget = self.task_table.cellWidget(row, 2)
+        run_button = self.task_table.cellWidget(row, 1)
         if script_widget:
             script_input = script_widget.layout().itemAt(0).widget()
             script_path = script_input.text()
 
-            if script_path:
-                logging.info(f"Choose Script: {script_path}")
-                # Здесь можно добавить вызов логики выполнения скрипта
-            else:
+            if not script_path:
                 logging.warning(f"Скрипт не указан для строки {row + 1}")
+                return
+
+            if run_button.text() == "▷":  # Если кнопка показывает "Play"
+                run_button.setText("☐")  # Меняем значок на "Stop"
+                logging.info(f"Задача {row + 1}: Запуск скрипта {script_path}")
+            else:
+                run_button.setText("▷")  # Меняем значок на "Play"
+                logging.info(f"Задача {row + 1}: Остановка скрипта {script_path}")
+
 
     def delete_task_row(self, row):
         """Удаляет выбранную строку."""
@@ -286,7 +284,6 @@ class AsyncSchedulerWindow(QMainWindow):
             end_time_input = self.task_table.cellWidget(row_count, 4)
             if end_time_input and "end_time" in task:
                 end_time_input.setText(task["end_time"])
-
 
     def save_tasks(self):
         """Сохраняет текущую конфигурацию задач в файл JSON в каталоге DCA."""
@@ -481,10 +478,30 @@ class AsyncSchedulerWindow(QMainWindow):
             else:
                 self.task_table.cellWidget(next_row, 3).setStyleSheet("")
     
-    async def execute_script(script_path):
+    async def toggle_task(self, button, row):
+        """Переключение состояния задачи: запуск или остановка."""
+        script_widget = self.task_table.cellWidget(row, 2)
+        if script_widget:
+            script_input = script_widget.layout().itemAt(0).widget()
+            script_path = script_input.text()
+
+            if not script_path:
+                logging.warning(f"Скрипт не указан для строки {row + 1}")
+                return
+            
+            if button.text() == "▷":  # Если текущий символ Play
+                button.setText("☐")  # Меняем на Stop
+                logging.info(f"Запуск скрипта: {script_path}")
+                #asyncio.ensure_future(self.execute_script(script_path, button))
+                #await self.execute_script(script_path, self.task_table.cellWidget(row, 1))
+            else:
+                button.setText("▷")  # Меняем обратно на Play
+                logging.info(f"Остановка скрипта: {script_path}")
+
+    async def execute_script(self, script_path):
+        """Асинхронное выполнение скрипта."""
         try:
             logging.info(f"[EXECUTE_SCRIPT] Начало выполнения скрипта: {script_path}")
-
             with open(script_path, 'r', encoding='utf-8') as file:
                 script = json.load(file)
 
@@ -493,15 +510,20 @@ class AsyncSchedulerWindow(QMainWindow):
                 for step in block.get("steps", []):
                     action = step.get("action")
                     params = step.get("params", {})
-                    logging.info(f"[STEP] Выполнение действия: {action} с параметрами: {params}")
-                    if action in ScriptActions:
-                        try:
-                            await ScriptActions[action](params)
-                            logging.info(f"[STEP] Успешно выполнено действие: {action}")
-                        except Exception as e:
-                            logging.error(f"[ERROR] Ошибка выполнения действия {action}: {e}")
+                    if action in actions:
+                        await actions[action](params)
                     else:
                         logging.error(f"[UNKNOWN_ACTION] Неизвестное действие: {action}")
-            logging.info("[EXECUTE_SCRIPT] Скрипт успешно завершён.")
+            logging.info(f"[EXECUTE_SCRIPT] Скрипт {script_path} успешно завершён.")
         except Exception as e:
             logging.error(f"[EXECUTE_SCRIPT] Ошибка выполнения скрипта {script_path}: {e}")
+
+    def start_script(script_path):
+        """Запуск скрипта в отдельном потоке."""
+        if script_path in threads and threads[script_path].is_alive():
+            logging.warning(f"[START_SCRIPT] Скрипт {script_path} уже выполняется.")
+            return
+
+        thread = threading.Thread(target=lambda: asyncio.run(execute_script(script_path)), daemon=True)
+        threads[script_path] = thread
+        thread.start()

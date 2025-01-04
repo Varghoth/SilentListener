@@ -46,10 +46,12 @@ class ScriptActions:
         :param params: {"message": "Ваше сообщение"}
         """
         try:
+            logging.info(f"[LOG_MESSAGE_ACTION] Параметры: {params}")
             message = params.get("message", "Нет сообщения")
-            logging.info(f"[LOG_MESSAGE_ACTION] {message}")
+            logging.info(f"[LOG_MESSAGE_ACTION] Сообщение: {message}")
         except Exception as e:
             logging.error(f"[LOG_MESSAGE_ACTION] Ошибка: {e}")
+
 
     async def wait_action(self, params):
         """
