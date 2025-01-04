@@ -80,7 +80,7 @@ class AsyncSchedulerWindow(QMainWindow):
 
         # Таблица задач
         self.task_table = QTableWidget(0, 6)  # Колонки: Автозапуск, Запуск, Скрипт, Удаление
-        self.task_table.setHorizontalHeaderLabels(["AS", "Start", "Script", "T.Strt", "T.End", "X"])
+        self.task_table.setHorizontalHeaderLabels(["⚙", "▷", "Script", "☀︎", "☾", "✖"])
         self.task_table.horizontalHeader().setStretchLastSection(False)
         self.task_table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)  # Показываем вертикальную прокрутку всегда
         layout.addWidget(self.task_table)
@@ -131,7 +131,7 @@ class AsyncSchedulerWindow(QMainWindow):
 
     def set_column_widths(self):
         """Устанавливает ширину столбцов в процентах от ширины окна."""
-        column_widths = [3, 6, 70, 9, 9, 2]  # Процентное соотношение ширины столбцов
+        column_widths = [3, 4, 72, 9, 9, 2]  # Процентное соотношение ширины столбцов
         total_width = self.task_table.viewport().width()
 
         for i, percentage in enumerate(column_widths):
@@ -148,7 +148,7 @@ class AsyncSchedulerWindow(QMainWindow):
         self.task_table.setCellWidget(row_count, 0, auto_start_checkbox)
 
         # Запуск скрипта (кнопка)
-        run_button = QPushButton("Start")
+        run_button = QPushButton("▷")
         run_button.clicked.connect(lambda: self.run_task(row_count))
         self.task_table.setCellWidget(row_count, 1, run_button)
 
@@ -171,9 +171,29 @@ class AsyncSchedulerWindow(QMainWindow):
         self.task_table.setCellWidget(row_count, 4, end_time_input)
 
         # Удаление строки (кнопка)
-        delete_button = QPushButton("X")
+        delete_button = QPushButton("✖")
         delete_button.clicked.connect(lambda: self.delete_task_row(row_count))
-        self.task_table.setCellWidget(row_count, 6, delete_button)
+        self.task_table.setCellWidget(row_count, 5, delete_button)
+
+    def toggle_task(self, button, row):
+        """Переключение состояния задачи: запуск или остановка."""
+        script_widget = self.task_table.cellWidget(row, 2)
+        if script_widget:
+            script_input = script_widget.layout().itemAt(0).widget()
+            script_path = script_input.text()
+
+            if not script_path:
+                logging.warning(f"Скрипт не указан для строки {row + 1}")
+                return
+
+            if button.text() == "▷":  # Если текущий символ Play
+                button.setText("☐")  # Меняем на Stop
+                logging.info(f"Запуск скрипта: {script_path}")
+                # Здесь добавьте вызов выполнения скрипта
+            else:
+                button.setText("▷")  # Меняем обратно на Play
+                logging.info(f"Остановка скрипта: {script_path}")
+                # Здесь добавьте логику остановки скрипта
 
     def create_script_widget(self):
         # Создаем контейнер для текстового ввода и кнопки выбора файла
