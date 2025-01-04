@@ -1,0 +1,25 @@
+{
+    "blocks": [
+        {
+            "name": "Проверка Firefox",
+            "steps": [
+                {
+                    "action": "check_firefox",
+                    "params": {}
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Firefox проверен и запущен."
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 5
+                    }
+                }
+            ]
+        }
+    ]
+}
