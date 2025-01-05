@@ -26,6 +26,19 @@
                     "params": {
                         "duration": 1
                     }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Проверяем, запущен ли fox"
+                    }
+                },
+                {
+                    "action": "find_template",
+                    "params": {
+                        "template": "firefox",
+                        "threshold": 0.9
+                    }
                 }
             ]
         }

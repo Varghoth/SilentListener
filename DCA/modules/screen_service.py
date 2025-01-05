@@ -1,7 +1,5 @@
 import os
 import cv2
-import mss
-cv2.setNumThreads(1)
 import numpy as np
 import pyautogui
 import logging
@@ -11,8 +9,9 @@ class ScreenService:
     Сервис для работы с экраном и шаблонами.
     """
 
-    def __init__(self):
+    def __init__(self, base_template_path="/app/DCA/templates"):
         self.logger = logging.getLogger("ScreenService")
+        self.base_template_path = base_template_path  # Базовый путь к шаблонам
 
     def capture_screen(self):
         """
@@ -24,25 +23,14 @@ class ScreenService:
         except Exception as e:
             self.logger.error(f"Ошибка при захвате экрана: {e}")
             return None
-        
-    def capture_screen_with_mss(save_path):
-        try:
-            with mss.mss() as sct:
-                monitor = sct.monitors[1]
-                screenshot = sct.grab(monitor)
-                img = np.array(screenshot)
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(save_path, gray)
-                logging.info(f"Скриншот сохранён в {save_path}.")
-        except Exception as e:
-            logging.error(f"Ошибка при захвате экрана с использованием mss: {e}")
 
-    def load_templates(self, folder_path):
+    def load_templates(self, folder_name):
         """
         Загружает все шаблоны из указанной папки.
-        :param folder_path: Путь к папке с шаблонами.
+        :param folder_name: Имя папки с шаблонами.
         :return: Список шаблонов в формате numpy.ndarray.
         """
+        folder_path = os.path.join(self.base_template_path, folder_name)
         self.logger.info(f"Загрузка шаблонов из папки: {folder_path}")
         if not os.path.exists(folder_path):
             self.logger.error(f"Папка не найдена: {folder_path}")
@@ -83,21 +71,22 @@ class ScreenService:
         self.logger.info("Шаблоны не найдены на экране.")
         return False
 
-    def is_template_on_screen(self, folder_path, threshold=0.8):
+    def is_template_on_screen(self, template_name, threshold=0.8):
         """
-        Проверяет, присутствуют ли на экране шаблоны из указанной папки.
-        :param folder_path: Путь к папке с шаблонами.
+        Проверяет, присутствует ли на экране шаблон с указанным именем.
+        :param template_name: Имя шаблона (папка с шаблонами).
         :param threshold: Порог совпадения.
         :return: True, если хотя бы один шаблон найден, иначе False.
         """
+        folder_path = os.path.join(self.base_template_path, template_name)
         templates = self.load_templates(folder_path)
         if not templates:
-            self.logger.error("Шаблоны не загружены.")
+            self.logger.error(f"[ScreenService] Шаблоны для '{template_name}' не загружены.")
             return False
 
         screen = self.capture_screen()
         if screen is None:
-            self.logger.error("Ошибка захвата экрана. Проверка завершена.")
+            self.logger.error("[ScreenService] Ошибка захвата экрана. Проверка завершена.")
             return False
 
         return self.match_templates_on_screen(screen, templates, threshold)
