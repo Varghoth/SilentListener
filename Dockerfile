@@ -30,6 +30,7 @@ RUN apt-get update && \
     qasync \
     x11-xkb-utils \
     xserver-xorg-core \
+    mousepad \
     arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
