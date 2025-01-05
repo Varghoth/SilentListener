@@ -10,6 +10,7 @@ import threading
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
+from modules.mouse_service import MouseController
 
 class ScriptActions:
     def __init__(self, loop):
@@ -19,6 +20,7 @@ class ScriptActions:
             "wait": self.wait_action,
             "capture_screen": self.capture_screen_action,
             "find_template": self.find_template_action,
+            "click_template": self.click_template_action,
         }
 
     async def log_message_action(self, params):
@@ -85,6 +87,30 @@ class ScriptActions:
                 logging.info(f"[FIND_TEMPLATE_ACTION] Шаблон '{template_name}' не найден.")
         except Exception as e:
             logging.error(f"[FIND_TEMPLATE_ACTION] Ошибка: {e}")
+
+    async def click_template_action(self, params):
+        """
+        Ищет шаблон на экране и нажимает на него.
+        :param params: Словарь параметров с ключами:
+                    - "template" (имя шаблона/папки)
+                    - "threshold" (порог совпадения, опционально)
+        """
+        try:
+            template_name = params.get("template", "")
+            threshold = params.get("threshold", 0.8)
+
+            if not template_name:
+                logging.error("[CLICK_TEMPLATE_ACTION] Параметр 'template' не указан.")
+                return
+
+            screen_service = ScreenService()
+            mouse_controller = MouseController(config_path="/app/config/movement_profile.json")
+            if screen_service.interact_with_template(template_name, mouse_controller, threshold):
+                logging.info(f"[CLICK_TEMPLATE_ACTION] Успешное взаимодействие с шаблоном '{template_name}'.")
+            else:
+                logging.info(f"[CLICK_TEMPLATE_ACTION] Шаблон '{template_name}' не найден.")
+        except Exception as e:
+            logging.error(f"[CLICK_TEMPLATE_ACTION] Ошибка: {e}")
 
     
 # Настройка логирования

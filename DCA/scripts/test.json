@@ -39,6 +39,13 @@
                         "template": "firefox",
                         "threshold": 0.9
                     }
+                },
+                {
+                    "action": "click_template",
+                    "params": {
+                        "template": "firefox",
+                        "threshold": 0.9
+                    }
                 }
             ]
         }

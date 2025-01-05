@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pyautogui
 import logging
+from modules.mouse_service import MouseController
 
 class ScreenService:
     """
@@ -90,3 +91,37 @@ class ScreenService:
             return False
 
         return self.match_templates_on_screen(screen, templates, threshold)
+    
+    def interact_with_template(self, template_name, mouse_controller, threshold=0.8):
+        """
+        Ищет шаблон на экране и взаимодействует с ним (двигает мышь и кликает).
+        :param template_name: Имя шаблона (папка с шаблонами).
+        :param mouse_controller: Экземпляр MouseController.
+        :param threshold: Порог совпадения.
+        """
+        folder_path = os.path.join(self.base_template_path, template_name)
+        templates = self.load_templates(folder_path)
+        if not templates:
+            self.logger.error(f"Шаблоны для '{template_name}' не найдены.")
+            return False
+
+        screen = self.capture_screen()
+        if screen is None:
+            self.logger.error("Ошибка захвата экрана. Взаимодействие завершено.")
+            return False
+
+        for template in templates:
+            result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+            if max_val >= threshold:
+                target_x, target_y = max_loc[0] + template.shape[1] // 2, max_loc[1] + template.shape[0] // 2
+                self.logger.info(f"Шаблон найден. Координаты: ({target_x}, {target_y}), совпадение: {max_val}")
+
+                # Используем переданный экземпляр mouse_controller
+                mouse_controller.move_to(target_x, target_y)
+                mouse_controller.click()
+                return True
+
+        self.logger.info(f"Шаблон '{template_name}' не найден.")
+        return False
