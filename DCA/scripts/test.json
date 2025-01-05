@@ -12,13 +12,19 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 2
+                        "duration": 1
                     }
                 },
                 {
                     "action": "log_message",
                     "params": {
                         "message": "Тест завершён"
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
                     }
                 }
             ]

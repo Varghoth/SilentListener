@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget, QPushButton, QLineEdit,
-    QCheckBox, QFileDialog, QTableWidgetItem, QHeaderView, QDialog, QTextEdit
+    QCheckBox, QFileDialog, QTableWidgetItem, QHeaderView, QDialog, QTextEdit, QApplication
 )
 from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import QPalette, QColor, QIcon, QRegExpValidator  # Добавляем правильный импорт QPalette и QColor
@@ -8,8 +8,11 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QRegExpValidator  # Добав�
 from modules.script_actions import ScriptActions
 from modules.task_manager import TaskManager
 
+from qasync import QEventLoop
+import asyncio
 import logging
 import json
+import sys
 import os
 
 class LogWindow(QDialog):
@@ -17,7 +20,7 @@ class LogWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Logs")
-        self.resize(600, 400)
+        self.resize(700, 400)
 
         # Основное текстовое поле для логов
         self.log_text = QTextEdit(self)
@@ -54,11 +57,15 @@ class LogHandler(logging.Handler):
 class AsyncSchedulerWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        # Инициализируем QEventLoop для qasync
+        self.loop = asyncio.get_event_loop()
+
         self.dca_root = os.path.join(os.path.dirname(__file__), "..", "DCA") # Определяем корневой каталог DCA
-        self.script_actions = ScriptActions()  # Создаем экземпляр ScriptActions один раз
+        self.script_actions = ScriptActions(self.loop)  # Создаем экземпляр ScriptActions один раз
         self.resize(700, 300)  # Увеличиваем ширину окна
         self.apply_dark_theme()  # Применяем темную тему
-        self.task_manager = TaskManager()  # Подключаем TaskManager
+        self.task_manager = TaskManager(loop=self.loop)  # Подключаем TaskManager
 
         # Устанавливаем путь к иконке
         icon_path = os.path.join(self.dca_root, "assets", "icon.png")
@@ -156,7 +163,7 @@ class AsyncSchedulerWindow(QMainWindow):
         run_button_layout = QHBoxLayout()
         run_button_layout.setContentsMargins(0, 0, 0, 0)
         run_button = QPushButton("▷")
-        run_button.clicked.connect(lambda: self.run_task(row_count))  # Подключаем метод для обработки
+        run_button.clicked.connect(lambda: self.loop.create_task(self.run_task(row_count)))  # Используем QEventLoop
         run_button_layout.addWidget(run_button)
         run_button_container.setLayout(run_button_layout)
         self.task_table.setCellWidget(row_count, 1, run_button_container)
@@ -454,61 +461,75 @@ class AsyncSchedulerWindow(QMainWindow):
 
 
 
-    def run_task(self, row):
-        """Запуск или остановка задачи."""
+    async def run_task(self, row):
         try:
-            # Получаем контейнер с кнопкой
-            run_button_widget = self.task_table.cellWidget(row, 1)
-            if not run_button_widget:
-                logging.error(f"[UI] Контейнер кнопки запуска не найден в строке {row}")
-                return
+            run_button = self._get_widget_from_row(row, column=1, widget_type=QPushButton)
+            script_input = self._get_widget_from_row(row, column=2, widget_type=QLineEdit)
+            script_path = script_input.text() if script_input else None
 
-            # Извлекаем кнопку из контейнера
-            layout = run_button_widget.layout()
-            if not layout or layout.count() == 0:
-                logging.error(f"[UI] Layout кнопки запуска отсутствует в строке {row}")
-                return
-
-            run_button = layout.itemAt(0).widget()
-            if not run_button:
-                logging.error(f"[UI] Кнопка запуска отсутствует в строке {row}")
-                return
-
-            # Получаем виджет для ввода пути к скрипту
-            script_widget = self.task_table.cellWidget(row, 2)
-            if not script_widget:
-                logging.error(f"[UI] Виджет для скрипта отсутствует в строке {row}")
-                return
-
-            # Извлекаем текстовое поле
-            script_input = script_widget.layout().itemAt(0).widget()
-            if not script_input:
-                logging.error(f"[UI] Поле ввода скрипта отсутствует в строке {row}")
-                return
-
-            script_path = script_input.text()
             if not script_path:
                 logging.warning(f"[UI] Скрипт не указан для строки {row + 1}")
                 return
 
-            if run_button.text() == "▷":  # Если кнопка показывает "Play"
-                run_button.setText("☐")  # Меняем значок на "Stop"
+            if run_button.text() == "▷":
+                run_button.setText("☐")
                 logging.info(f"[UI] Задача {row + 1}: Запуск скрипта {script_path}")
-                self.start_task(script_path)
+                await self.task_manager.start_task(script_path)
             else:
-                run_button.setText("▷")  # Меняем значок на "Play"
+                run_button.setText("▷")
                 logging.info(f"[UI] Задача {row + 1}: Остановка скрипта {script_path}")
-                self.stop_task(script_path)
+                self.task_manager.stop_task(script_path)
 
         except Exception as e:
             logging.error(f"[UI] Ошибка при запуске задачи: {e}")
 
 
 
-    def start_task(self, script_path):
-        self.task_manager.start_task(script_path)
-        logging.info(f"[UI] Задача {script_path} запущена")
-    
+
+    def _get_widget_from_row(self, row, column, widget_type):
+        """Получает виджет заданного типа из указанной строки и столбца таблицы.
+
+        :param row: Номер строки.
+        :param column: Номер столбца.
+        :param widget_type: Ожидаемый тип виджета (например, QPushButton, QLineEdit).
+        :return: Найденный виджет или None, если виджет отсутствует.
+        """
+        try:
+            widget_container = self.task_table.cellWidget(row, column)
+            if not widget_container:
+                logging.error(f"[UI] Контейнер виджета отсутствует в строке {row}, колонке {column}")
+                return None
+
+            if isinstance(widget_container, QWidget):
+                layout = widget_container.layout()
+                if layout and layout.count() > 0:
+                    widget = layout.itemAt(0).widget()
+                    if isinstance(widget, widget_type):
+                        return widget
+
+            elif isinstance(widget_container, widget_type):
+                return widget_container
+
+            logging.error(f"[UI] Виджет типа {widget_type.__name__} отсутствует в строке {row}, колонке {column}")
+            return None
+
+        except Exception as e:
+            logging.error(f"[UI] Ошибка при извлечении виджета из строки {row}, колонки {column}: {e}")
+            return None
+
+
+
+
+    async def start_task(self, script_path):
+        if script_path in self.tasks:
+            logging.warning(f"[TaskManager] Задача уже выполняется: {script_path}")
+            return
+
+        cancel_event = asyncio.Event()
+        task = self.loop.create_task(self.execute_task(script_path, cancel_event))
+        self.tasks[script_path] = (task, cancel_event)
+        logging.info(f"[TaskManager] Задача запущена: {script_path}")
+
     def stop_task(self, script_path):
         self.task_manager.stop_task(script_path)
         logging.info(f"[UI] Задача {script_path} остановлена")

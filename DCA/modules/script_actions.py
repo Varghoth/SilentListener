@@ -1,70 +1,45 @@
 import subprocess
 import logging
 import asyncio
+import pyautogui
+import time
+import cv2
+import numpy as np
+import pyautogui
+import threading
+cv2.setNumThreads(1)
 
+from global_storage import get_full_path
+from modules.screen_service import ScreenService
 
 class ScriptActions:
-    """
-    Класс для управления действиями, вызываемыми из скриптов.
-    """
-
-    def __init__(self):
-        """
-        Инициализация класса ScriptActions.
-        """
+    def __init__(self, loop):
+        self.loop = loop
         self.actions = {
-            "check_firefox": self.check_firefox_action,
             "log_message": self.log_message_action,
             "wait": self.wait_action,
+            "is_firefox_running": self.is_firefox_running,
+            "capture_screen": self.capture_screen_action,
         }
 
-    async def check_firefox_action(self, params=None):
-        """
-        Проверяет, запущен ли Firefox, и запускает его, если не запущен.
-        :param params: Параметры действия (опционально, для совместимости с другими действиями).
-        """
-        try:
-            logging.info("[CHECK_FIREFOX_ACTION] Проверяем, запущен ли Firefox...")
-            result = subprocess.run(
-                ["pgrep", "-x", "firefox"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            if result.returncode == 0:
-                logging.info("[CHECK_FIREFOX_ACTION] Firefox уже запущен.")
-            else:
-                logging.info("[CHECK_FIREFOX_ACTION] Firefox не запущен. Запускаем...")
-                subprocess.Popen(["firefox"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                await asyncio.sleep(2)  # Небольшая задержка для запуска
-                logging.info("[CHECK_FIREFOX_ACTION] Firefox успешно запущен.")
-        except Exception as e:
-            logging.error(f"[CHECK_FIREFOX_ACTION] Ошибка: {e}")
-
     async def log_message_action(self, params):
-        """
-        Логирует сообщение из переданных параметров.
-        :param params: {"message": "Ваше сообщение"}
-        """
         try:
-            logging.info(f"[LOG_MESSAGE_ACTION] Параметры: {params}")
             message = params.get("message", "Нет сообщения")
             logging.info(f"[LOG_MESSAGE_ACTION] Сообщение: {message}")
         except Exception as e:
             logging.error(f"[LOG_MESSAGE_ACTION] Ошибка: {e}")
 
-
     async def wait_action(self, params):
-        """
-        Выполняет задержку на указанное количество секунд.
-        :param params: {"duration": 5}
-        """
         try:
             duration = params.get("duration", 0)
             logging.info(f"[WAIT_ACTION] Задержка {duration} секунд.")
-            await asyncio.sleep(duration)
+            await asyncio.sleep(duration)  # Убедитесь, что sleep выполняется в правильном цикле
             logging.info("[WAIT_ACTION] Задержка завершена.")
+        except asyncio.CancelledError:
+            logging.info("[WAIT_ACTION] Задержка отменена.")
         except Exception as e:
             logging.error(f"[WAIT_ACTION] Ошибка: {e}")
+
 
     def get_action(self, action_name):
         """
@@ -73,15 +48,60 @@ class ScriptActions:
         :return: Функция действия или None, если действие не найдено.
         """
         return self.actions.get(action_name)
+    
+    def run_in_thread(target, *args, **kwargs):
+        """
+        Запускает функцию в отдельном потоке.
+        """
+        thread = threading.Thread(target=target, args=args, kwargs=kwargs, daemon=True)
+        thread.start()
+        return thread
+    
+    def is_firefox_running_in_thread():
+        firefox_templates_path = get_full_path("templates/firefox")
+        templates = ScreenService.load_templates(firefox_templates_path)
 
+        if not templates:
+            logging.error("Шаблоны для Firefox не найдены.")
+            return False
+
+        screen = ScreenService.capture_screen()
+        if screen is None:
+            logging.error("Ошибка захвата экрана. Проверка завершена.")
+            return False
+
+        is_running = ScreenService.match_templates_on_screen(screen, templates)
+        return is_running
+
+
+    async def is_firefox_running(self, params=None):
+        """
+        Проверяет, запущен ли Firefox.
+        """
+        try:
+            thread = self.run_in_thread(self.is_firefox_running_in_thread)
+            thread.join()  # Дождаться завершения потока
+            logging.info("Проверка Firefox завершена.")
+        except Exception as e:
+            logging.error(f"Ошибка при проверке Firefox: {e}")
+
+    async def capture_screen_action(self, params):
+        try:
+            logging.info("[CAPTURE_SCREEN_ACTION] Начало захвата экрана.")
+            
+            # Тест захвата скриншота без OpenCV
+            screenshot = pyautogui.screenshot()
+            logging.info("[CAPTURE_SCREEN_ACTION] PyAutoGUI скриншот успешно сделан.")
+
+            # Сохраняем заглушку для OpenCV
+            save_path = params.get("save_path", "/tmp/screenshot_test.png")
+            np_screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
+            cv2.imwrite(save_path, np_screen)
+            logging.info(f"[CAPTURE_SCREEN_ACTION] Скриншот сохранён в {save_path}.")
+        except Exception as e:
+            logging.error(f"[CAPTURE_SCREEN_ACTION] Ошибка: {e}")
+
+    
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
 
-# Пример использования
-if __name__ == "__main__":
-    actions = ScriptActions()
-
-    # Пример вызова действий
-    asyncio.run(actions.check_firefox_action())
-    asyncio.run(actions.log_message_action({"message": "Привет, мир!"}))
-    asyncio.run(actions.wait_action({"duration": 2}))

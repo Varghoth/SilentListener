@@ -18,9 +18,24 @@ RUN apt-get update && \
     xfonts-75dpi \
     ca-certificates \
     bzip2 \
+    pyautogui \
+    python3-tk \
+    python3-dev \
+    build-essential \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    pillow \
+    gnome-screenshot \
+    qasync \
+    x11-xkb-utils \
+    xserver-xorg-core \
     arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+    # Установка Python-зависимостей
+    RUN pip install --no-cache-dir opencv-python-headless
 
     # Установка PulseAudio
     RUN apt-get update && apt-get install -y pulseaudio && \
