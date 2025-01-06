@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import pyautogui
 import threading
+import os
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
@@ -15,6 +16,7 @@ from modules.mouse_service import MouseController
 class ScriptActions:
     def __init__(self, loop):
         self.loop = loop
+        self.project_dir = os.path.abspath("./")  # Абсолютный путь к проекту
         self.actions = {
             "log_message": self.log_message_action,
             "wait": self.wait_action,
@@ -96,12 +98,18 @@ class ScriptActions:
             template_name = params.get("template", "")
             threshold = params.get("threshold", 0.8)
 
+            # Проверяем наличие папки config
+            config_dir = os.path.join(self.project_dir, "./")
+            os.makedirs(config_dir, exist_ok=True)
+
+            # Передаем путь в MouseController
+            mouse_controller = MouseController(config_dir)
+
             if not template_name:
                 logging.error("[CLICK_TEMPLATE_ACTION] Параметр 'template' не указан.")
                 return
 
             screen_service = ScreenService()
-            mouse_controller = MouseController(config_path="/app/config/movement_profile.json")
             if screen_service.interact_with_template(template_name, mouse_controller, threshold):
                 logging.info(f"[CLICK_TEMPLATE_ACTION] Успешное взаимодействие с шаблоном '{template_name}'.")
             else:

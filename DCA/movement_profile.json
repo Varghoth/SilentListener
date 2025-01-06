@@ -1,7 +1,0 @@
-{
-    "base_speed": 6.4,
-    "correction_speed": 3.2,
-    "delay_before_click": [0.01, 0.025],
-    "offset_range_main": [-5, 5],
-    "offset_range_correction": [-2, 2]
-}
