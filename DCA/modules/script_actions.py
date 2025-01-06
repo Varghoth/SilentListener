@@ -91,9 +91,6 @@ class ScriptActions:
     async def click_template_action(self, params):
         """
         Ищет шаблон на экране и нажимает на него.
-        :param params: Словарь параметров с ключами:
-                    - "template" (имя шаблона/папки)
-                    - "threshold" (порог совпадения, опционально)
         """
         try:
             template_name = params.get("template", "")
@@ -111,6 +108,7 @@ class ScriptActions:
                 logging.info(f"[CLICK_TEMPLATE_ACTION] Шаблон '{template_name}' не найден.")
         except Exception as e:
             logging.error(f"[CLICK_TEMPLATE_ACTION] Ошибка: {e}")
+
 
     
 # Настройка логирования

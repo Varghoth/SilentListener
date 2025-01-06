@@ -3,70 +3,44 @@ import pyautogui
 import json
 import time
 import math
+import pyautogui
+import json
+import logging
+
 
 class MouseController:
     def __init__(self, config_path):
         self.load_config(config_path)
 
     def load_config(self, config_path):
-        with open(config_path, "r", encoding="utf-8") as file:
-            self.config = json.load(file)
-
-    def move_to(self, x, y, template_size=(0, 0)):
         """
-        Реалистичное движение мыши к заданной точке (x, y) через заранее рассчитанную траекторию.
+        Загружает конфигурацию из файла.
         """
-        current_x, current_y = pyautogui.position()
-        template_width, _ = template_size
+        try:
+            with open(config_path, "r", encoding="utf-8") as file:
+                self.config = json.load(file)
+        except Exception as e:
+            logging.error(f"Ошибка загрузки конфигурации: {e}")
+            self.config = {"base_speed": 0.1}  # Значения по умолчанию
 
-        # Рассчитываем промежуточные и финальные точки
-        mid_target_x, mid_target_y = self._calculate_target(x, y, template_width, radius_range=(1.0, 2.5))
-        final_target_x, final_target_y = self._calculate_target(x, y, template_width, radius_range=(0.1, 0.55))
-
-        # Генерируем траектории
-        mid_trajectory = self._calculate_bezier_trajectory(
-            current_x, current_y, mid_target_x, mid_target_y, num_points=random.randint(3, 5)
-        )
-        final_trajectory = self._calculate_bezier_trajectory(
-            mid_target_x, mid_target_y, final_target_x, final_target_y, num_points=random.randint(2, 3)
-        )
-
-        # Выполняем движение
-        self._execute_trajectory(mid_trajectory, base_speed=self.config["base_speed"], acceleration="logarithmic")
-        self._execute_trajectory(final_trajectory, base_speed=self.config["correction_speed"], acceleration="none")
-
-    def _calculate_target(self, center_x, center_y, template_width, radius_range):
+    def _generate_bezier_control_points(self, start_x, start_y, end_x, end_y):
         """
-        Рассчитывает целевую точку для движения в заданном радиусе от центра темплейта.
-        :param radius_range: Кортеж с минимальным и максимальным радиусом (в процентах ширины темплейта).
+        Генерирует контрольные точки для кривой Безье между начальной и конечной точками.
         """
-        radius_min = template_width * radius_range[0]  # Минимальный радиус
-        radius_max = template_width * radius_range[1]  # Максимальный радиус
+        # Случайные точки между началом и концом для кривой
+        control_x1 = random.randint(min(start_x, end_x), max(start_x, end_x))
+        control_y1 = random.randint(min(start_y, end_y), max(start_y, end_y))
+        control_x2 = random.randint(min(start_x, end_x), max(start_x, end_x))
+        control_y2 = random.randint(min(start_y, end_y), max(start_y, end_y))
 
-        while True:
-            offset_x = random.uniform(-radius_max, radius_max)
-            offset_y = random.uniform(-radius_max, radius_max)
-            distance = math.sqrt(offset_x**2 + offset_y**2)
+        return [(start_x, start_y), (control_x1, control_y1), (control_x2, control_y2), (end_x, end_y)]
 
-            if radius_min <= distance <= radius_max:
-                return int(center_x + offset_x), int(center_y + offset_y)
-
-    def _calculate_bezier_trajectory(self, start_x, start_y, end_x, end_y, num_points):
+    def _generate_bezier_curve(self, control_points, steps):
         """
-        Вычисляет траекторию движения по кривой Безье.
-        """
-        control_points = [(start_x, start_y)]
-        for _ in range(num_points - 2):
-            control_x = random.randint(min(start_x, end_x), max(start_x, end_x))
-            control_y = random.randint(min(start_y, end_y), max(start_y, end_y))
-            control_points.append((control_x, control_y))
-        control_points.append((end_x, end_y))
-
-        return self._generate_bezier_curve(control_points)
-
-    def _generate_bezier_curve(self, control_points):
-        """
-        Генерация траектории на основе контрольных точек.
+        Вычисляет точки на кривой Безье с заданными контрольными точками.
+        :param control_points: Список контрольных точек.
+        :param steps: Количество точек на кривой.
+        :return: Список точек [(x1, y1), (x2, y2), ...].
         """
         def bezier_point(t, points):
             while len(points) > 1:
@@ -79,51 +53,82 @@ class MouseController:
                 ]
             return points[0]
 
-        return [bezier_point(t / 100, control_points) for t in range(101)]
+        return [bezier_point(t / steps, control_points) for t in range(steps)]
 
-    def _execute_trajectory(self, trajectory, base_speed, acceleration="linear", max_duration=1.0):
+
+    def move_to(self, x, y, template_size=(0, 0)):
         """
-        Выполняет движение по заданной траектории с постепенным увеличением скорости.
-        Возвращает конечную скорость.
+        Плавное перемещение мыши к заданной точке (x, y) по случайной кривой Безье.
+        После завершения движения выполняется корректировочное движение.
         """
-        total_points = len(trajectory)
-        previous_speed = base_speed  # Начальная скорость задается базовой
+        screen_width, screen_height = pyautogui.size()
 
-        for i, (x, y) in enumerate(trajectory):
-            # Если это последний такт, устанавливаем быструю фиксированную скорость
-            if i == total_points - 1:
-                duration = 0.05  # Финальный такт выполняется очень быстро
-            else:
-                if i == 0:
-                    # Для первой точки начинаем с базовой скорости
-                    speed_factor = 1
-                elif acceleration == "logarithmic":
-                    progress = i / total_points
-                    speed_factor = 1 + math.log(1 + progress * 10)
-                else:
-                    speed_factor = 1
+        # Учитываем границы экрана
+        x = max(0, min(screen_width - 1, x))
+        y = max(0, min(screen_height - 1, y))
 
-                # Рассчитываем длительность текущего шага
-                duration = (base_speed / total_points) / speed_factor
+        # Получаем текущую позицию мыши
+        current_x, current_y = pyautogui.position()
 
-                # Учитываем предыдущую скорость
-                if previous_speed > 0 and duration > 0:
-                    previous_speed_factor = previous_speed / duration
-                    duration /= max(previous_speed_factor, 1)  # Защита от деления на 0
+        # Вычисляем расстояние до конечной точки
+        distance = math.sqrt((x - current_x) ** 2 + (y - current_y) ** 2)
 
-                # Ограничиваем максимальную длительность
-                duration = min(duration, max_duration / total_points)
+        # Динамическое количество шагов
+        steps = max(10, int(distance / 20))  # Минимум 10 шагов, 1 шаг на каждые 20 пикселей
+        base_speed = self.config.get("base_speed", 0.01)
 
-            # Двигаем мышь
-            pyautogui.moveTo(x, y, 0)
+        # Генерируем контрольные точки для кривой Безье
+        control_points = self._generate_bezier_control_points(current_x, current_y, x, y)
 
-            # Обновляем предыдущую скорость
-            previous_speed = 1 / duration if duration > 0 else base_speed
+        # Вычисляем точки на кривой Безье
+        trajectory = self._generate_bezier_curve(control_points, steps)
 
-        return previous_speed  # Возвращаем конечную скорость
+        # Двигаем мышь по траектории
+        for point_x, point_y in trajectory:
+            pyautogui.moveTo(point_x, point_y, duration=base_speed / steps)
+
+        logging.info(f"Основное движение мыши завершено. Конечная точка: ({x}, {y}).")
+
+        # Корректировочное движение
+        self._adjust_position(x, y, template_size)
+
+    def _adjust_position(self, x, y, template_size):
+        """
+        Корректировочное движение к произвольной точке в пределах 5%-25% ширины шаблона.
+        """
+        template_width, _ = template_size
+
+        # Рассчитываем смещение в пределах 5%-25% ширины шаблона
+        offset_x = random.uniform(-template_width * 0.25, template_width * 0.25)
+        offset_y = random.uniform(-template_width * 0.25, template_width * 0.25)
+
+        # Ограничиваем смещение по минимальному радиусу 5%
+        distance = math.sqrt(offset_x**2 + offset_y**2)
+        if distance < template_width * 0.05:
+            scale = (template_width * 0.05) / distance
+            offset_x *= scale
+            offset_y *= scale
+
+        # Конечные координаты корректировочного движения
+        final_x = int(x + offset_x)
+        final_y = int(y + offset_y)
+
+        # Движение в два шага
+        current_x, current_y = pyautogui.position()
+        for i in range(2):
+            t = (i + 1) / 2
+            intermediate_x = int(current_x + (final_x - current_x) * t)
+            intermediate_y = int(current_y + (final_y - current_y) * t)
+            pyautogui.moveTo(intermediate_x, intermediate_y, duration=self.config.get("base_speed", 0.01) / 2)
+
+        logging.info(f"Корректировочное движение завершено. Конечная точка: ({final_x}, {final_y}).")
+
+
 
     def click(self):
         """
         Симулирует клик мыши.
         """
         pyautogui.click()
+        logging.info("Клик мыши выполнен.")
+

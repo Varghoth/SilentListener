@@ -96,17 +96,13 @@ class ScreenService:
     
     def interact_with_template(self, template_name, mouse_controller, threshold=0.8):
         """
-        Ищет шаблон на экране и взаимодействует с ним (двигает мышь и кликает).
+        Ищет шаблон на экране, вычисляет его центр и кликает по нему.
         """
-        folder_path = os.path.join(self.base_template_path, template_name)
-        templates = self.load_templates(folder_path)
-        if not templates:
-            self.logger.error(f"Шаблоны для '{template_name}' не найдены.")
-            return False
-
+        templates = self.load_templates(template_name)
         screen = self.capture_screen()
-        if screen is None:
-            self.logger.error("Ошибка захвата экрана. Взаимодействие завершено.")
+
+        if not templates or screen is None:
+            self.logger.error(f"Шаблоны для '{template_name}' не загружены или экран не захвачен.")
             return False
 
         for template in templates:
@@ -114,48 +110,15 @@ class ScreenService:
             _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
             if max_val >= threshold:
-                # Вычисляем координаты центра шаблона
+                # Вычисляем центр шаблона
                 center_x = max_loc[0] + template.shape[1] // 2
                 center_y = max_loc[1] + template.shape[0] // 2
 
-                # Добавляем случайное смещение для предпоследнего такта
-                radius_min = template.shape[1]  # 100% ширины
-                radius_max = template.shape[1] * 2.5  # 250% ширины
-                offset_x = random.uniform(-radius_max, radius_max)
-                offset_y = random.uniform(-radius_max, radius_max)
-                distance = math.sqrt(offset_x**2 + offset_y**2)
-                if distance > radius_max or distance < radius_min:
-                    scale = radius_max / distance if distance > radius_max else radius_min / distance
-                    offset_x *= scale
-                    offset_y *= scale
-
-                target_x = int(center_x + offset_x)
-                target_y = int(center_y + offset_y)
-
-                # Финальная точка для последнего такта
-                final_offset_range = (template.shape[1] * 0.1, template.shape[1] * 0.55)
-                final_offset_x = random.uniform(-final_offset_range[1], final_offset_range[1])
-                final_offset_y = random.uniform(-final_offset_range[1], final_offset_range[1])
-                final_distance = math.sqrt(final_offset_x**2 + final_offset_y**2)
-                if final_distance > final_offset_range[1] or final_distance < final_offset_range[0]:
-                    scale = final_offset_range[1] / final_distance if final_distance > final_offset_range[1] else final_offset_range[0] / final_distance
-                    final_offset_x *= scale
-                    final_offset_y *= scale
-
-                final_x = int(center_x + final_offset_x)
-                final_y = int(center_y + final_offset_y)
-
-                self.logger.info(f"Шаблон найден. Основная цель: ({target_x}, {target_y}), Финальная цель: ({final_x}, {final_y}), совпадение: {max_val}")
-
-                # Выполняем движение: предпоследний и последний такт
-                mouse_controller.move_to(target_x, target_y)
-                mouse_controller.move_to(final_x, final_y)
-
-                # Клик мышью после завершения движения
+                # Выполняем действия
+                self.logger.info(f"Шаблон найден. Центр: ({center_x}, {center_y}), совпадение: {max_val}")
+                mouse_controller.move_to(center_x, center_y)
                 mouse_controller.click()
                 return True
 
         self.logger.info(f"Шаблон '{template_name}' не найден.")
         return False
-
-
