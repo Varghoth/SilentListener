@@ -34,18 +34,18 @@
                     }
                 },
                 {
-                    "action": "find_template",
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
                     "params": {
-                        "template": "firefox",
-                        "threshold": 0.9
+                        "duration": 1
                     }
                 },
                 {
-                    "action": "click_template",
-                    "params": {
-                        "template": "firefox",
-                        "threshold": 0.9
-                    }
+                    "action": "select_youtube_tab",
+                    "params": {}
                 }
             ]
         }

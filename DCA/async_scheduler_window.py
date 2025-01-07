@@ -72,7 +72,7 @@ class AsyncSchedulerWindow(QMainWindow):
         self.setWindowIcon(QIcon(icon_path))  # Устанавливаем пользовательскую иконку
 
         # Флаг отображения окна логов
-        self.show_logs = True
+        self.show_logs = False
 
         # Инициализация логов
         self.log_window = LogWindow()

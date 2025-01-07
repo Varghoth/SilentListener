@@ -41,7 +41,15 @@ class MouseController:
             "bezier_curve_strength": {"min": round(random.uniform(0.2, 0.5), 2), "max": round(random.uniform(0.6, 0.8), 2)},
             "steps_main": {"min": random.randint(10, 20), "max": random.randint(25, 50)},
             "steps_correction": {"min": random.randint(2, 3), "max": random.randint(4, 6)},
-            "template_offset": {"min": round(random.uniform(0.05, 0.1), 2), "max": round(random.uniform(0.2, 0.3), 2)}
+            "template_offset": {"min": round(random.uniform(0.05, 0.1), 2), "max": round(random.uniform(0.2, 0.3), 2)},
+            "scroll_amount": {
+                "min": random.randint(1, 5),
+                "max": random.randint(6, 15)
+            },
+            "scroll_delay": {
+                "min": round(random.uniform(0.1, 0.3), 2),
+                "max": round(random.uniform(0.4, 0.7), 2)
+            }
         }
         os.makedirs(self.config_dir, exist_ok=True)
         try:
@@ -50,6 +58,7 @@ class MouseController:
                 logging.info(f"Сгенерирована новая конфигурация и сохранена в {self.config_path}.")
         except Exception as e:
             logging.error(f"Ошибка при сохранении конфигурации: {e}")
+
 
     def _random_value(self, param_name):
         """
@@ -155,3 +164,44 @@ class MouseController:
         time.sleep(delay)
         pyautogui.click()
         logging.info(f"Клик мыши выполнен с задержкой {delay:.2f} сек.")
+
+    def scroll(self, direction="down", amount=None):
+        """
+        Эмулирует прокрутку колесика мыши.
+        :param direction: Направление прокрутки ('up' или 'down').
+        :param amount: Количество "щелчков" прокрутки (если None, определяется случайно).
+        """
+        # Устанавливаем случайное количество прокруток, если не задано
+        if amount is None:
+            amount = random.randint(
+                int(self.config.get("scroll_amount", {}).get("min", 1)),
+                int(self.config.get("scroll_amount", {}).get("max", 10))
+            )
+
+        # Определяем направление
+        multiplier = 1 if direction == "down" else -1
+        scroll_amount = amount * multiplier
+
+        # Прокрутка
+        pyautogui.scroll(scroll_amount)
+        logging.info(f"Прокрутка {direction} на {amount} шагов.")
+        # Добавляем случайную задержку для реалистичности
+        delay = random.uniform(
+            self.config.get("scroll_delay", {}).get("min", 0.2),
+            self.config.get("scroll_delay", {}).get("max", 0.5)
+        )
+        time.sleep(delay)
+
+    def precise_scroll(self, direction="down", steps=10, delay_between_steps=(0.05, 0.2)):
+        """
+        Прокрутка списков с фиксированным количеством шагов и задержками между шагами.
+        :param direction: Направление прокрутки ('up' или 'down').
+        :param steps: Количество шагов.
+        :param delay_between_steps: Кортеж с минимальной и максимальной задержкой между шагами.
+        """
+        multiplier = 1 if direction == "down" else -1
+        for _ in range(steps):
+            pyautogui.scroll(multiplier)
+            delay = random.uniform(*delay_between_steps)
+            time.sleep(delay)
+        logging.info(f"Точная прокрутка {direction} на {steps} шагов.")

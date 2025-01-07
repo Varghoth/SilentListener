@@ -22,7 +22,8 @@ class ScreenService:
         """
         try:
             screenshot = pyautogui.screenshot()
-            return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
+            #return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY) # Градации серого (GRAY)
+            return cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)   # Цветной (BGR)
         except Exception as e:
             self.logger.error(f"Ошибка при захвате экрана: {e}")
             return None
@@ -44,7 +45,8 @@ class ScreenService:
         for file_name in os.listdir(folder_path):
             if file_name.endswith(".png"):
                 full_path = os.path.join(folder_path, file_name)
-                template = cv2.imread(full_path, cv2.IMREAD_GRAYSCALE)
+                #template = cv2.imread(full_path, cv2.IMREAD_GRAYSCALE)  # Градации серого
+                template = cv2.imread(full_path, cv2.IMREAD_COLOR)       # Цветное изображение
                 if template is not None:
                     templates.append(template)
                 else:
@@ -58,7 +60,7 @@ class ScreenService:
     def match_templates_on_screen(self, screen, templates, threshold=0.8):
         """
         Проверяет, соответствует ли один из шаблонов экрану.
-        :param screen: numpy.ndarray - скриншот экрана в градациях серого.
+        :param screen: numpy.ndarray - скриншот экрана в цвете (BGR).
         :param templates: Список шаблонов.
         :param threshold: Порог совпадения.
         :return: True, если хотя бы один шаблон найден, иначе False.

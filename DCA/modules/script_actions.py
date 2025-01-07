@@ -13,6 +13,9 @@ from global_storage import get_full_path
 from modules.screen_service import ScreenService
 from modules.mouse_service import MouseController
 
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
+
 class ScriptActions:
     def __init__(self, loop):
         self.loop = loop
@@ -23,6 +26,8 @@ class ScriptActions:
             "capture_screen": self.capture_screen_action,
             "find_template": self.find_template_action,
             "click_template": self.click_template_action,
+            "make_firefox_focus": self.make_firefox_focus_action,
+            "select_youtube_tab": self.select_youtube_tab_action,
         }
 
     async def log_message_action(self, params):
@@ -117,8 +122,66 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[CLICK_TEMPLATE_ACTION] Ошибка: {e}")
 
+    async def make_firefox_focus_action(self, params):
+        """
+        Проверяет, находится ли Firefox в фокусе, и при необходимости выполняет действия для его активации.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
 
-    
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
+            # Шаг 1: Проверка, находится ли Firefox в фокусе
+            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, находится ли Firefox в фокусе.")
+            screen_service = ScreenService()
+            if screen_service.is_template_on_screen("firefox_focus", threshold):
+                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox уже в фокусе. Действия не требуются.")
+                return
+
+            # Шаг 2: Проверка, запущен ли Firefox
+            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, запущен ли Firefox.")
+            if screen_service.is_template_on_screen("firefox", threshold):
+                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox запущен, но не в фокусе. Кликаем на него.")
+                mouse_controller = MouseController(self.project_dir)
+                screen_service.interact_with_template("firefox", mouse_controller, threshold)
+                return
+
+            # Шаг 3: Запуск браузера, если Firefox не найден
+            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запущен. Ищем и запускаем браузер.")
+            if screen_service.is_template_on_screen("browser", threshold):
+                mouse_controller = MouseController(self.project_dir)
+                screen_service.interact_with_template("browser", mouse_controller, threshold)
+                await asyncio.sleep(5)  # Ждем загрузки Firefox
+
+                # Повторная проверка, запущен ли Firefox
+                if screen_service.is_template_on_screen("firefox_focus", threshold):
+                    logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox успешно запущен.")
+                else:
+                    logging.error("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запустился. Проверьте шаблоны.")
+            else:
+                logging.error("[MAKE_FIREFOX_FOCUS_ACTION] Браузер не найден. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[MAKE_FIREFOX_FOCUS_ACTION] Ошибка: {e}")
+
+    async def select_youtube_tab_action(self, params):
+        """
+        Проверяет наличие шаблона вкладки YouTube и нажимает на него, если он найден.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие шаблона YouTube
+            logging.info("[SELECT_YOUTUBE_TAB_ACTION] Проверяем наличие вкладки YouTube.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("youtube_music_tab", threshold):
+                logging.info("[SELECT_YOUTUBE_TAB_ACTION] Вкладка YouTube найдена. Выполняем клик.")
+                screen_service.interact_with_template("youtube_music_tab", mouse_controller, threshold)
+            else:
+                logging.error("[SELECT_YOUTUBE_TAB_ACTION] Вкладка YouTube не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
+
+
 
