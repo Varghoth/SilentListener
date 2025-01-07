@@ -28,7 +28,11 @@ class ScriptActions:
             "click_template": self.click_template_action,
             "make_firefox_focus": self.make_firefox_focus_action,
             "select_youtube_tab": self.select_youtube_tab_action,
+            ###################### Управление Стримингами ######################
             "set_streaming_play": self.set_streaming_play_action,
+            "set_streaming_pause": self.set_streaming_pause_action,
+            "set_streaming_unfold": self.set_streaming_unfold_action,
+            "set_streaming_fold": self.set_streaming_fold_action,
         }
 
     async def log_message_action(self, params):
@@ -184,6 +188,7 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
 
+############################ [START] Управление стримингами ############################
     async def set_streaming_play_action(self, params):
         """
         Устанавливает режим воспроизведения музыки (Play).
@@ -222,4 +227,116 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SET_STREAMING_PLAY_ACTION] Ошибка: {e}")
 
+    async def set_streaming_pause_action(self, params):
+        """
+        Устанавливает режим паузы воспроизведения музыки.
+        Проверяет наличие темплейта "play". Если он есть, музыка уже на паузе.
+        Если "play" не найден, нажимает на кнопку "pause" и проверяет ещё раз.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
 
+            # Проверяем наличие темплейта play (музыка на паузе)
+            logging.info("[SET_STREAMING_PAUSE_ACTION] Проверяем, воспроизводится ли музыка.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("play", threshold):
+                logging.info("[SET_STREAMING_PAUSE_ACTION] Музыка уже на паузе. Действия не требуются.")
+                return
+
+            # Если музыка воспроизводится, ищем кнопку pause
+            logging.info("[SET_STREAMING_PAUSE_ACTION] Музыка воспроизводится. Ищем кнопку 'pause'.")
+            if screen_service.is_template_on_screen("pause", threshold):
+                logging.info("[SET_STREAMING_PAUSE_ACTION] Кнопка 'pause' найдена. Выполняем клик.")
+                screen_service.interact_with_template("pause", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия pause
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта play
+                if screen_service.is_template_on_screen("play", threshold):
+                    logging.info("[SET_STREAMING_PAUSE_ACTION] Музыка успешно поставлена на паузу.")
+                else:
+                    logging.error("[SET_STREAMING_PAUSE_ACTION] Музыка не остановилась. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_STREAMING_PAUSE_ACTION] Кнопка 'pause' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_PAUSE_ACTION] Ошибка: {e}")
+
+    async def set_streaming_unfold_action(self, params):
+        """
+        Устанавливает стриминг в развернутый режим, в котором виден плейлист.
+        Проверяет наличие темплейта "fold". Если он есть, плеер уже развернут.
+        Если "fold" не найден, нажимает на кнопку "unfold" и проверяет ещё раз.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие темплейта fold (плеер развернут)
+            logging.info("[SET_STREAMING_UNFOLD_ACTION] Проверяем, развернут ли плеер.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("fold", threshold):
+                logging.info("[SET_STREAMING_UNFOLD_ACTION] Плеер развернут. Действия не требуются.")
+                return
+
+            # Если плеер свернут, ищем кнопку unfold
+            logging.info("[SET_STREAMING_UNFOLD_ACTION] Плеер свернут. Ищем кнопку 'unfold'.")
+            if screen_service.is_template_on_screen("unfold", threshold):
+                logging.info("[SET_STREAMING_UNFOLD_ACTION] Кнопка 'unfold' найдена. Выполняем клик.")
+                screen_service.interact_with_template("unfold", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия unfold
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта play
+                if screen_service.is_template_on_screen("fold", threshold):
+                    logging.info("[SET_STREAMING_UNFOLD_ACTION] Плеер развернут.")
+                else:
+                    logging.error("[SET_STREAMING_UNFOLD_ACTION] Плеер не развернулся. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_STREAMING_UNFOLD_ACTION] Кнопка 'fold' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_UNFOLD_ACTION] Ошибка: {e}")
+
+    async def set_streaming_fold_action(self, params):
+        """
+        Устанавливает стриминг в свернутый режим.
+        Проверяет наличие темплейта "unfold". Если он есть, плеер уже свернут.
+        Если "unfold" не найден, нажимает на кнопку "fold" и проверяет ещё раз.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие темплейта unfold (плеер свернут)
+            logging.info("[SET_STREAMING_FOLD_ACTION] Проверяем, свернут ли плеер.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("unfold", threshold):
+                logging.info("[SET_STREAMING_FOLD_ACTION] Плеер уже свернут. Действия не требуются.")
+                return
+
+            # Если плеер развернут, ищем кнопку fold
+            logging.info("[SET_STREAMING_FOLD_ACTION] Плеер развернут. Ищем кнопку 'fold'.")
+            if screen_service.is_template_on_screen("fold", threshold):
+                logging.info("[SET_STREAMING_FOLD_ACTION] Кнопка 'fold' найдена. Выполняем клик.")
+                screen_service.interact_with_template("fold", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия fold
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта unfold
+                if screen_service.is_template_on_screen("unfold", threshold):
+                    logging.info("[SET_STREAMING_FOLD_ACTION] Плеер успешно свернут.")
+                else:
+                    logging.error("[SET_STREAMING_FOLD_ACTION] Плеер не свернулся. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_STREAMING_FOLD_ACTION] Кнопка 'fold' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_FOLD_ACTION] Ошибка: {e}")

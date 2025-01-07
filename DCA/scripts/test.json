@@ -56,6 +56,46 @@
                 {
                     "action": "set_streaming_play",
                     "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 5
+                    }
+                },
+                {
+                    "action": "set_streaming_pause",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_unfold",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "set_streaming_play",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_fold",
+                    "params": {}
                 }
             ]
         }
