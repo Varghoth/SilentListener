@@ -96,6 +96,36 @@
                 {
                     "action": "set_streaming_fold",
                     "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_forward",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_backward",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "scrolling",
+                    "params": {}
                 }
             ]
         }

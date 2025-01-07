@@ -8,6 +8,7 @@ import numpy as np
 import pyautogui
 import threading
 import os
+import random
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
@@ -33,6 +34,10 @@ class ScriptActions:
             "set_streaming_pause": self.set_streaming_pause_action,
             "set_streaming_unfold": self.set_streaming_unfold_action,
             "set_streaming_fold": self.set_streaming_fold_action,
+            "set_streaming_forward": self.set_streaming_forward_action,
+            "set_streaming_backward": self.set_streaming_backward_action,
+            "scrolling": self.scrolling_action,
+
         }
 
     async def log_message_action(self, params):
@@ -340,3 +345,96 @@ class ScriptActions:
                 logging.error("[SET_STREAMING_FOLD_ACTION] Кнопка 'fold' не найдена. Проверьте шаблоны.")
         except Exception as e:
             logging.error(f"[SET_STREAMING_FOLD_ACTION] Ошибка: {e}")
+
+    async def set_streaming_forward_action(self, params):
+        """
+        Нажимает кнопку "forward" (следующий трек).
+        Проверяет наличие темплейта "forward" и кликает по нему, если найден.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            logging.info("[SET_STREAMING_FORWARD_ACTION] Ищем кнопку 'forward'.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("forward", threshold):
+                logging.info("[SET_STREAMING_FORWARD_ACTION] Кнопка 'forward' найдена. Выполняем клик.")
+                screen_service.interact_with_template("forward", mouse_controller, threshold)
+            else:
+                logging.error("[SET_STREAMING_FORWARD_ACTION] Кнопка 'forward' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_FORWARD_ACTION] Ошибка: {e}")
+
+    async def set_streaming_backward_action(self, params):
+        """
+        Нажимает кнопку "backward" (предыдущий трек).
+        Проверяет наличие темплейта "backward" и кликает по нему, если найден.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            logging.info("[SET_STREAMING_BACKWARD_ACTION] Ищем кнопку 'backward'.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("backward", threshold):
+                logging.info("[SET_STREAMING_BACKWARD_ACTION] Кнопка 'backward' найдена. Выполняем клик.")
+                screen_service.interact_with_template("backward", mouse_controller, threshold)
+            else:
+                logging.error("[SET_STREAMING_BACKWARD_ACTION] Кнопка 'backward' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_BACKWARD_ACTION] Ошибка: {e}")
+
+    async def scrolling_action(self, params):
+        """
+        Позиционирует мышь перед скроллингом и выполняет скроллинг в заданном или случайном направлении.
+        :param params: Параметры действия (например, "direction" и "steps").
+                        direction: "up" или "down" (опционально).
+                        steps: Количество шагов скроллинга (опционально).
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+            direction = params.get("direction", random.choice(["up", "down"]))
+            steps = params.get("steps", random.randint(3, 10))
+
+            # Проверяем наличие анкорного темплейта
+            logging.info("[SCROLLING_ACTION] Проверяем анкорные темплейты для позиционирования.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("ancor_scrolling", threshold):
+                logging.info("[SCROLLING_ACTION] Анкор 'SCROLLING' найден. Выполняем позиционирование.")
+                template_location = screen_service.get_template_location("ancor_scrolling", threshold)
+
+                if template_location:
+                    template_x, template_y, template_width, template_height = template_location
+
+                    # Сдвигаем мышь вниз относительно высоты темплейта
+                    random_y_offset = random.uniform(2 * template_height, 7 * template_height)
+                    target_x = template_x + template_width // 2
+                    target_y = template_y + random_y_offset
+
+                    mouse_controller.move_to(int(target_x), int(target_y))
+                    logging.info(f"[SCROLLING_ACTION] Мышь позиционирована в точку ({target_x}, {target_y}).")
+                else:
+                    logging.error("[SCROLLING_ACTION] Не удалось определить координаты анкора.")
+                    return
+            else:
+                logging.error("[SCROLLING_ACTION] Анкор 'SCROLLING' не найден. Проверьте шаблоны.")
+                return
+
+            # Выполняем скроллинг
+            logging.info(f"[SCROLLING_ACTION] Выполняем скроллинг: направление '{direction}', шаги {steps}.")
+            for _ in range(steps):
+                if direction == "up":
+                    pyautogui.scroll(1)
+                elif direction == "down":
+                    pyautogui.scroll(-1)
+                await asyncio.sleep(random.uniform(0.2, 0.5))  # Рандомная задержка между шагами
+            logging.info("[SCROLLING_ACTION] Скроллинг завершен.")
+        except Exception as e:
+            logging.error(f"[SCROLLING_ACTION] Ошибка: {e}")
+

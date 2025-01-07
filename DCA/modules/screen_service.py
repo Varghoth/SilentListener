@@ -124,3 +124,29 @@ class ScreenService:
 
         self.logger.info(f"Шаблон '{template_name}' не найден.")
         return False
+    
+    def get_template_location(self, template_name, threshold=0.8):
+        """
+        Возвращает координаты верхнего левого угла и размеры найденного шаблона: (x, y, width, height).
+        Если шаблон не найден, возвращает None.
+        :param template_name: Имя шаблона (папка с шаблонами).
+        :param threshold: Порог совпадения.
+        :return: (x, y, width, height) или None.
+        """
+        templates = self.load_templates(template_name)
+        screen = self.capture_screen()
+
+        if not templates or screen is None:
+            self.logger.error(f"Шаблоны для '{template_name}' не загружены или экран не захвачен.")
+            return None
+
+        for template in templates:
+            result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+            if max_val >= threshold:
+                self.logger.info(f"Шаблон найден: {template_name}. Позиция: {max_loc}, совпадение: {max_val}")
+                return max_loc[0], max_loc[1], template.shape[1], template.shape[0]
+
+        self.logger.info(f"Шаблон '{template_name}' не найден.")
+        return None
