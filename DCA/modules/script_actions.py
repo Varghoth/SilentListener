@@ -28,6 +28,7 @@ class ScriptActions:
             "click_template": self.click_template_action,
             "make_firefox_focus": self.make_firefox_focus_action,
             "select_youtube_tab": self.select_youtube_tab_action,
+            "set_streaming_play": self.set_streaming_play_action,
         }
 
     async def log_message_action(self, params):
@@ -183,5 +184,42 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
 
+    async def set_streaming_play_action(self, params):
+        """
+        Устанавливает режим воспроизведения музыки (Play).
+        Проверяет наличие темплейта "pause". Если он есть, воспроизведение уже запущено.
+        Если "pause" не найден, нажимает на кнопку "play" и проверяет ещё раз.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие темплейта pause (музыка воспроизводится)
+            logging.info("[SET_STREAMING_PLAY_ACTION] Проверяем, воспроизводится ли музыка.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("pause", threshold):
+                logging.info("[SET_STREAMING_PLAY_ACTION] Музыка уже воспроизводится. Действия не требуются.")
+                return
+
+            # Если музыка не воспроизводится, ищем кнопку play
+            logging.info("[SET_STREAMING_PLAY_ACTION] Музыка не воспроизводится. Ищем кнопку 'play'.")
+            if screen_service.is_template_on_screen("play", threshold):
+                logging.info("[SET_STREAMING_PLAY_ACTION] Кнопка 'play' найдена. Выполняем клик.")
+                screen_service.interact_with_template("play", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия play
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта pause
+                if screen_service.is_template_on_screen("pause", threshold):
+                    logging.info("[SET_STREAMING_PLAY_ACTION] Музыка успешно запущена.")
+                else:
+                    logging.error("[SET_STREAMING_PLAY_ACTION] Музыка не запустилась. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_STREAMING_PLAY_ACTION] Кнопка 'play' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_PLAY_ACTION] Ошибка: {e}")
 
 

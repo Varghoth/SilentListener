@@ -46,6 +46,16 @@
                 {
                     "action": "select_youtube_tab",
                     "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "set_streaming_play",
+                    "params": {}
                 }
             ]
         }
