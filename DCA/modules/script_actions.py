@@ -31,6 +31,7 @@ class ScriptActions:
             "make_firefox_focus": self.make_firefox_focus_action,
             "select_youtube_tab": self.select_youtube_tab_action,
             ###################### Управление Стримингами ######################
+            "do_nothing": self.do_nothing,
             "set_streaming_play": self.set_streaming_play_action,
             "set_streaming_pause": self.set_streaming_pause_action,
             "set_streaming_unfold": self.set_streaming_unfold_action,
@@ -46,6 +47,7 @@ class ScriptActions:
             "set_cycle_one": self.set_cycle_one_action,
             "set_cycle_off": self.set_cycle_off_action,
             "set_cycle_on": self.set_cycle_on_action,
+            "random_action": self.random_action,
 
         }
 
@@ -75,6 +77,28 @@ class ScriptActions:
         """
         return self.actions.get(action_name)
     
+    async def random_action(self, params):
+        """
+        Выполняет случайное действие на основе заданных вероятностей.
+        :param params: Словарь с ключом "probabilities", указывающим на веса действий.
+        """
+        try:
+            probabilities = params.get("probabilities", {})
+            actions = list(probabilities.keys())
+            weights = list(probabilities.values())
+
+            # Выбираем случайное действие
+            chosen_action = random.choices(actions, weights=weights, k=1)[0]
+
+            logging.info(f"[RANDOM_ACTION] Выбрано действие: {chosen_action}")
+            action = self.get_action(chosen_action)
+            if action:
+                await action({})
+            else:
+                logging.warning(f"[RANDOM_ACTION] Неизвестное действие: {chosen_action}")
+        except Exception as e:
+            logging.error(f"[RANDOM_ACTION] Ошибка: {e}")
+
     async def capture_screen_action(self, params):
         try:
             logging.info("[CAPTURE_SCREEN_ACTION] Начало захвата экрана.")
@@ -203,6 +227,10 @@ class ScriptActions:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
 
 ############################ [START] Управление стримингами ############################
+    async def do_nothing(self, params):
+        """Ничего не делает."""
+        logging.info("[DO_NOTHING] Ничего не делаем. Отдыхаем!")
+    
     async def set_streaming_play_action(self, params):
         """
         Устанавливает режим воспроизведения музыки (Play).
@@ -711,7 +739,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SET_CYCLE_ONE_ACTION] Ошибка: {e}")
 
-
     async def _move_mouse_away_randomly(self, template_name, mouse_controller):
         """
         Отводит мышь на случайное расстояние после клика по темплейту.
@@ -736,7 +763,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[MOVE_MOUSE_AWAY] Ошибка: {e}")
 
-
     async def set_cycle_off_action(self, params):
         """
         Устанавливает режим циклического воспроизведения в положение OFF.
@@ -759,7 +785,6 @@ class ScriptActions:
             logging.info("[SET_CYCLE_OFF_ACTION] Завершено. Cycle установлен в положение OFF.")
         except Exception as e:
             logging.error(f"[SET_CYCLE_OFF_ACTION] Ошибка: {e}")
-
 
     async def set_cycle_on_action(self, params):
         """

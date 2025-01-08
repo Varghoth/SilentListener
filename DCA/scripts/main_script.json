@@ -1,0 +1,66 @@
+{
+    "blocks": [
+        {
+            "name": "Основной цикл работы",
+            "steps": [
+                {
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "set_streaming_play",
+                    "params": {}
+                },
+                {
+                    "action": "set_streaming_unfold",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Симуляция случайного действия"
+                    }
+                },
+                {
+                    "action": "random_action",
+                    "params": {
+                        "probabilities": {
+                            "do_nothing": 90,
+                            "set_streaming_play": 5,
+                            "set_streaming_pause": 5,
+                            "set_streaming_forward": 3,
+                            "set_streaming_backward": 2,
+                            "click_play_small": 2,
+                            "set_cycle_on": 5,
+                            "set_cycle_off": 2,
+                            "set_shuffle_on": 3,
+                            "set_shuffle_off": 3,
+                            "set_streaming_fold": 1
+                        }
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 300,
+                        "random_offset": 60
+                    }
+                }
+            ]
+        }
+    ]
+}

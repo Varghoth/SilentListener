@@ -49,14 +49,36 @@ class TaskManager:
             logging.error(f"[TaskManager] Ошибка выполнения скрипта {script_path}: {e}")
 
     async def start_task(self, script_path):
-        if script_path in self.tasks:
-            logging.warning(f"[TaskManager] Задача уже выполняется: {script_path}")
-            return
+        """
+        Запускает выполнение заданий из JSON-скрипта.
+        :param script_path: Путь к JSON-скрипту.
+        """
+        try:
+            with open(script_path, "r") as file:
+                script = json.load(file)
 
-        cancel_event = asyncio.Event()
-        task = self.loop.create_task(self.execute_task(script_path, cancel_event))
-        self.tasks[script_path] = (task, cancel_event)
-        logging.info(f"[TaskManager] Задача запущена: {script_path}")
+            while True:  # Циклическое выполнение
+                logging.info(f"[TaskManager] Выполнение скрипта: {script_path}")
+
+                for block in script.get("blocks", []):
+                    logging.info(f"[TaskManager] Выполнение блока: {block.get('name', 'Unnamed Block')}")
+                    
+                    for step in block.get("steps", []):
+                        action_name = step.get("action")
+                        params = step.get("params", {})
+                        
+                        logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                        action = self.actions.get_action(action_name)
+                        
+                        if action:
+                            await action(params)
+                        else:
+                            logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+                
+                logging.info("[TaskManager] Завершение текущего цикла выполнения. Ожидание перед перезапуском...")
+                await asyncio.sleep(2)  # Небольшая пауза перед новым запуском
+        except Exception as e:
+            logging.error(f"[TaskManager] Ошибка выполнения скрипта {script_path}: {e}")
 
     def stop_task(self, script_path):
         task_tuple = self.tasks.get(script_path)

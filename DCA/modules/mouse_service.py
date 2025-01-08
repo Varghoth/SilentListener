@@ -59,7 +59,6 @@ class MouseController:
         except Exception as e:
             logging.error(f"Ошибка при сохранении конфигурации: {e}")
 
-
     def _random_value(self, param_name):
         """
         Возвращает случайное значение в пределах, указанных в конфигурации.
