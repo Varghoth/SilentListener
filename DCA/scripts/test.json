@@ -126,6 +126,16 @@
                 {
                     "action": "scrolling",
                     "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_like",
+                    "params": {}
                 }
             ]
         }

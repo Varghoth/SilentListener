@@ -37,6 +37,8 @@ class ScriptActions:
             "set_streaming_forward": self.set_streaming_forward_action,
             "set_streaming_backward": self.set_streaming_backward_action,
             "scrolling": self.scrolling_action,
+            "set_streaming_like": self.set_streaming_like_action,
+            "error_correction": self.error_correction_action,
 
         }
 
@@ -413,7 +415,7 @@ class ScriptActions:
                     template_x, template_y, template_width, template_height = template_location
 
                     # Сдвигаем мышь вниз относительно высоты темплейта
-                    random_y_offset = random.uniform(2 * template_height, 7 * template_height)
+                    random_y_offset = random.uniform(2 * template_height, 6 * template_height)
                     target_x = template_x + template_width // 2
                     target_y = template_y + random_y_offset
 
@@ -438,3 +440,87 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SCROLLING_ACTION] Ошибка: {e}")
 
+    async def set_streaming_like_action(self, params):
+        """
+        Ставит лайк текущему треку.
+        Проверяет наличие темплейта "like_off". Если он есть, нажимает на кнопку для постановки лайка.
+        Если "like_off" не найден, лайк уже проставлен, действия не требуются.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие темплейта like_off (лайк не поставлен)
+            logging.info("[SET_STREAMING_LIKE_ACTION] Проверяем, установлен ли лайк.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if not screen_service.is_template_on_screen("like_off", threshold):
+                logging.info("[SET_STREAMING_LIKE_ACTION] Лайк уже установлен. Действия не требуются.")
+                return
+
+            # Если лайк не установлен, ищем и нажимаем кнопку like_off
+            logging.info("[SET_STREAMING_LIKE_ACTION] Лайк не установлен. Ищем кнопку 'like_off'.")
+            if screen_service.is_template_on_screen("like_off", threshold):
+                logging.info("[SET_STREAMING_LIKE_ACTION] Кнопка 'like_off' найдена. Выполняем клик.")
+                screen_service.interact_with_template("like_off", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия like
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта like_on
+                if screen_service.is_template_on_screen("like_on", threshold):
+                    logging.info("[SET_STREAMING_LIKE_ACTION] Лайк успешно установлен.")
+                else:
+                    logging.error("[SET_STREAMING_LIKE_ACTION] Лайк не установился. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_STREAMING_LIKE_ACTION] Кнопка 'like_off' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_STREAMING_LIKE_ACTION] Ошибка: {e}")
+
+    async def error_correction_action(self, params):
+        """
+        Выполняет действия для исправления ошибок (например, пропуска рекламы).
+        Проверяет наличие кнопки "Skip" в градациях серого. Если найдена, нажимает на нее.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.75)  # Порог совпадения
+            logging.info("[ERROR_CORRECTION_ACTION] Проверяем наличие кнопки 'Skip'.")
+
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Загружаем шаблон 'Skip' в градациях серого
+            skip_template_name = "skip_ad"
+            skip_templates = screen_service.load_templates_grayscale(skip_template_name)
+
+            if not skip_templates:
+                logging.error(f"[ERROR_CORRECTION_ACTION] Шаблон 'Skip' не найден в папке '{skip_template_name}'.")
+                return
+
+            # Делаем скриншот экрана в градациях серого
+            screen = screen_service.capture_screen_grayscale()
+            if screen is None:
+                logging.error("[ERROR_CORRECTION_ACTION] Не удалось захватить экран. Пропускаем действие.")
+                return
+
+            # Ищем шаблон 'Skip' на экране
+            for template in skip_templates:
+                result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+                _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+                if max_val >= threshold:
+                    # Если найдено совпадение, кликаем по центру шаблона
+                    center_x = max_loc[0] + template.shape[1] // 2
+                    center_y = max_loc[1] + template.shape[0] // 2
+
+                    logging.info(f"[ERROR_CORRECTION_ACTION] Кнопка 'Skip' найдена. Центр: ({center_x}, {center_y}).")
+                    mouse_controller.move_to(center_x, center_y)
+                    mouse_controller.click()
+                    await asyncio.sleep(2)  # Небольшая задержка после клика
+                    return
+
+            logging.info("[ERROR_CORRECTION_ACTION] Кнопка 'Skip' не найдена на экране.")
+        except Exception as e:
+            logging.error(f"[ERROR_CORRECTION_ACTION] Ошибка: {e}")
