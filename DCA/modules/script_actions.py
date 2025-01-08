@@ -5,10 +5,11 @@ import pyautogui
 import time
 import cv2
 import numpy as np
-import pyautogui
 import threading
 import os
 import random
+import pytesseract
+from PIL import Image
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
@@ -39,6 +40,7 @@ class ScriptActions:
             "scrolling": self.scrolling_action,
             "set_streaming_like": self.set_streaming_like_action,
             "error_correction": self.error_correction_action,
+            "handle_ad_skip_with_ocr": self.handle_ad_skip_with_ocr_action,
 
         }
 
@@ -481,7 +483,8 @@ class ScriptActions:
     async def error_correction_action(self, params):
         """
         Выполняет действия для исправления ошибок (например, пропуска рекламы).
-        Проверяет наличие кнопки "Skip" в градациях серого. Если найдена, нажимает на нее.
+        Проверяет наличие кнопки "Skip" на экране, используя как градации серого, так и высококонтрастные изображения.
+        Если найдена, нажимает на нее.
         :param params: Параметры действия (например, "threshold").
         """
         try:
@@ -491,31 +494,48 @@ class ScriptActions:
             screen_service = ScreenService()
             mouse_controller = MouseController(self.project_dir)
 
-            # Загружаем шаблон 'Skip' в градациях серого
+            # Загружаем шаблон 'Skip' в высококонтрастном режиме
             skip_template_name = "skip_ad"
-            skip_templates = screen_service.load_templates_grayscale(skip_template_name)
+            skip_templates = screen_service.load_templates(skip_template_name)  # Цветные шаблоны
+            skip_templates_gray = screen_service.load_templates_grayscale(skip_template_name)  # Шаблоны в градациях серого
 
-            if not skip_templates:
-                logging.error(f"[ERROR_CORRECTION_ACTION] Шаблон 'Skip' не найден в папке '{skip_template_name}'.")
+            if not skip_templates and not skip_templates_gray:
+                logging.error(f"[ERROR_CORRECTION_ACTION] Шаблоны 'Skip' не найдены в папке '{skip_template_name}'.")
                 return
 
-            # Делаем скриншот экрана в градациях серого
-            screen = screen_service.capture_screen_grayscale()
-            if screen is None:
+            # Делаем скриншот экрана
+            screen_color = screen_service.capture_screen()  # Цветной скриншот
+            screen_gray = screen_service.capture_screen_grayscale()  # Градации серого
+
+            if screen_color is None or screen_gray is None:
                 logging.error("[ERROR_CORRECTION_ACTION] Не удалось захватить экран. Пропускаем действие.")
                 return
 
-            # Ищем шаблон 'Skip' на экране
+            # Обработка цветных шаблонов
             for template in skip_templates:
-                result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+                result = cv2.matchTemplate(screen_color, template, cv2.TM_CCOEFF_NORMED)
                 _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
                 if max_val >= threshold:
-                    # Если найдено совпадение, кликаем по центру шаблона
                     center_x = max_loc[0] + template.shape[1] // 2
                     center_y = max_loc[1] + template.shape[0] // 2
 
-                    logging.info(f"[ERROR_CORRECTION_ACTION] Кнопка 'Skip' найдена. Центр: ({center_x}, {center_y}).")
+                    logging.info(f"[ERROR_CORRECTION_ACTION] Цветной шаблон 'Skip' найден. Центр: ({center_x}, {center_y}).")
+                    mouse_controller.move_to(center_x, center_y)
+                    mouse_controller.click()
+                    await asyncio.sleep(2)  # Небольшая задержка после клика
+                    return
+
+            # Обработка шаблонов в градациях серого
+            for template in skip_templates_gray:
+                result = cv2.matchTemplate(screen_gray, template, cv2.TM_CCOEFF_NORMED)
+                _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+                if max_val >= threshold:
+                    center_x = max_loc[0] + template.shape[1] // 2
+                    center_y = max_loc[1] + template.shape[0] // 2
+
+                    logging.info(f"[ERROR_CORRECTION_ACTION] Шаблон в градациях серого 'Skip' найден. Центр: ({center_x}, {center_y}).")
                     mouse_controller.move_to(center_x, center_y)
                     mouse_controller.click()
                     await asyncio.sleep(2)  # Небольшая задержка после клика
@@ -524,3 +544,59 @@ class ScriptActions:
             logging.info("[ERROR_CORRECTION_ACTION] Кнопка 'Skip' не найдена на экране.")
         except Exception as e:
             logging.error(f"[ERROR_CORRECTION_ACTION] Ошибка: {e}")
+
+
+
+
+    async def handle_ad_skip_with_ocr_action(self, params):
+        """
+        Проверяет наличие текста "Skip" на экране и нажимает на кнопку.
+        Используется OCR для распознавания текста.
+        """
+        try:
+            logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Проверяем наличие текста 'Skip'.")
+
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Захватываем несколько последовательных скриншотов
+            for _ in range(3):  # 3 последовательных кадра
+                screen = screen_service.capture_screen_grayscale()
+                if screen is None:
+                    continue
+
+                # Преобразуем изображение для улучшения OCR
+                image = np.array(screen)
+                image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+                image = cv2.medianBlur(image, 3)  # Убираем шум
+                image = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)  # Увеличиваем масштаб
+
+                # Сохраняем изображение (для отладки)
+                debug_path = f"/tmp/debug_ocr_image_{random.randint(1000, 9999)}.png"
+                cv2.imwrite(debug_path, image)
+                logging.info(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] OCR изображение сохранено: {debug_path}")
+
+                # Применяем OCR
+                custom_config = r'--psm 6'  # Режим сегментации страницы, адаптированный для текста в одном блоке
+                text = pytesseract.image_to_string(image, lang="eng", config=custom_config)
+                logging.info(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] Распознанный текст: {text.strip()}")
+
+                if "Skip" in text:
+                    logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Найден текст 'Skip'. Выполняем клик.")
+                    
+                    # Получаем размеры экрана
+                    screen_width = screen_service.get_screen_width()
+                    screen_height = screen_service.get_screen_height()
+                    
+                    # Позиционируем мышь
+                    target_x = int(0.9 * screen_width)
+                    target_y = int(0.7 * screen_height)
+                    mouse_controller.move_to(target_x, target_y)
+                    mouse_controller.click()
+                    return
+
+                await asyncio.sleep(1)  # Задержка между кадрами
+
+            logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Текст 'Skip' не найден.")
+        except Exception as e:
+            logging.error(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] Ошибка: {e}")

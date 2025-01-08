@@ -31,6 +31,7 @@ RUN apt-get update && \
     x11-xkb-utils \
     xserver-xorg-core \
     mousepad \
+    pytesseract \
     arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

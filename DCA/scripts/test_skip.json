@@ -1,0 +1,53 @@
+{
+    "blocks": [
+        {
+            "name": "Тестовый блок",
+            "steps": [
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Сообщение из теста"
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Тест завершён"
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Проверяем, запущен ли fox"
+                    }
+                },
+                {
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "error_correction",
+                    "params": {}
+                }
+            ]
+        }
+    ]
+}

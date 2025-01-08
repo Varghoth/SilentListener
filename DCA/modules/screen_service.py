@@ -15,7 +15,14 @@ class ScreenService:
     def __init__(self, base_template_path="/app/DCA/templates"):
         self.logger = logging.getLogger("ScreenService")
         self.base_template_path = base_template_path  # Базовый путь к шаблонам
+        self.screen_width, self.screen_height = pyautogui.size()  # Инициализация размеров экрана
 
+    def get_screen_width(self):
+        return self.screen_width
+
+    def get_screen_height(self):
+        return self.screen_height
+    
     def capture_screen(self):
         """
         Делает скриншот экрана и возвращает его в формате numpy.ndarray (в градациях серого).
