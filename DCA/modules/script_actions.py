@@ -39,8 +39,8 @@ class ScriptActions:
             "set_streaming_backward": self.set_streaming_backward_action,
             "scrolling": self.scrolling_action,
             "set_streaming_like": self.set_streaming_like_action,
-            "error_correction": self.error_correction_action,
-            "handle_ad_skip_with_ocr": self.handle_ad_skip_with_ocr_action,
+            "skip_ad": self.skip_ad_action,
+            "click_play_small": self.click_play_small_action,
 
         }
 
@@ -480,7 +480,7 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SET_STREAMING_LIKE_ACTION] Ошибка: {e}")
 
-    async def error_correction_action(self, params):
+    async def skip_ad_action(self, params):
         """
         Выполняет действия для исправления ошибок (например, пропуска рекламы).
         Проверяет наличие кнопки "Skip" на экране, используя как градации серого, так и высококонтрастные изображения.
@@ -545,58 +545,49 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[ERROR_CORRECTION_ACTION] Ошибка: {e}")
 
-
-
-
-    async def handle_ad_skip_with_ocr_action(self, params):
+    async def click_play_small_action(self, params):
         """
-        Проверяет наличие текста "Skip" на экране и нажимает на кнопку.
-        Используется OCR для распознавания текста.
+        Ищет и нажимает на кнопку 'play_small', используя шаблоны в градациях серого и высококонтрастный метод.
+        :param params: Параметры действия (например, "threshold").
         """
         try:
-            logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Проверяем наличие текста 'Skip'.")
+            threshold = params.get("threshold", 0.8)  # Порог совпадения
+            logging.info("[CLICK_PLAY_SMALL_ACTION] Проверяем наличие кнопки 'play_small'.")
 
             screen_service = ScreenService()
             mouse_controller = MouseController(self.project_dir)
 
-            # Захватываем несколько последовательных скриншотов
-            for _ in range(3):  # 3 последовательных кадра
-                screen = screen_service.capture_screen_grayscale()
-                if screen is None:
-                    continue
+            # Загружаем шаблон 'play_small' в градациях серого
+            play_small_template_name = "play_small"
+            play_small_templates = screen_service.load_templates_grayscale(play_small_template_name)
 
-                # Преобразуем изображение для улучшения OCR
-                image = np.array(screen)
-                image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-                image = cv2.medianBlur(image, 3)  # Убираем шум
-                image = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)  # Увеличиваем масштаб
+            if not play_small_templates:
+                logging.error(f"[CLICK_PLAY_SMALL_ACTION] Шаблон 'play_small' не найден в папке '{play_small_template_name}'.")
+                return
 
-                # Сохраняем изображение (для отладки)
-                debug_path = f"/tmp/debug_ocr_image_{random.randint(1000, 9999)}.png"
-                cv2.imwrite(debug_path, image)
-                logging.info(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] OCR изображение сохранено: {debug_path}")
+            # Делаем скриншот экрана в градациях серого
+            screen_gray = screen_service.capture_screen_grayscale()
+            if screen_gray is None:
+                logging.error("[CLICK_PLAY_SMALL_ACTION] Не удалось захватить экран. Пропускаем действие.")
+                return
 
-                # Применяем OCR
-                custom_config = r'--psm 6'  # Режим сегментации страницы, адаптированный для текста в одном блоке
-                text = pytesseract.image_to_string(image, lang="eng", config=custom_config)
-                logging.info(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] Распознанный текст: {text.strip()}")
+            # Ищем шаблон 'play_small' на экране
+            for template in play_small_templates:
+                # Применяем метод сравнения шаблонов
+                result = cv2.matchTemplate(screen_gray, template, cv2.TM_CCOEFF_NORMED)
+                _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
-                if "Skip" in text:
-                    logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Найден текст 'Skip'. Выполняем клик.")
-                    
-                    # Получаем размеры экрана
-                    screen_width = screen_service.get_screen_width()
-                    screen_height = screen_service.get_screen_height()
-                    
-                    # Позиционируем мышь
-                    target_x = int(0.9 * screen_width)
-                    target_y = int(0.7 * screen_height)
-                    mouse_controller.move_to(target_x, target_y)
+                if max_val >= threshold:
+                    # Если найдено совпадение, определяем координаты центра шаблона
+                    center_x = max_loc[0] + template.shape[1] // 2
+                    center_y = max_loc[1] + template.shape[0] // 2
+
+                    logging.info(f"[CLICK_PLAY_SMALL_ACTION] Шаблон 'play_small' найден. Центр: ({center_x}, {center_y}).")
+                    mouse_controller.move_to(center_x, center_y)
                     mouse_controller.click()
+                    await asyncio.sleep(2)  # Небольшая задержка после клика
                     return
 
-                await asyncio.sleep(1)  # Задержка между кадрами
-
-            logging.info("[HANDLE_AD_SKIP_WITH_OCR_ACTION] Текст 'Skip' не найден.")
+            logging.info("[CLICK_PLAY_SMALL_ACTION] Кнопка 'play_small' не найдена на экране.")
         except Exception as e:
-            logging.error(f"[HANDLE_AD_SKIP_WITH_OCR_ACTION] Ошибка: {e}")
+            logging.error(f"[CLICK_PLAY_SMALL_ACTION] Ошибка: {e}")
