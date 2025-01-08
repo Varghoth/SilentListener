@@ -38,7 +38,13 @@
                     "params": {}
                 },
                 {
-                    "action": "scrolling",
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_cycle_on",
                     "params": {}
                 },
                 {
@@ -48,7 +54,7 @@
                     }
                 },
                 {
-                    "action": "click_play_small",
+                    "action": "set_cycle_off",
                     "params": {}
                 },
                 {
@@ -56,7 +62,12 @@
                     "params": {
                         "duration": 2
                     }
+                },
+                {
+                    "action": "set_cycle_one",
+                    "params": {}
                 }
+                
             ]
         }
     ]

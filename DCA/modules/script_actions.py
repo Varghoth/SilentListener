@@ -41,6 +41,11 @@ class ScriptActions:
             "set_streaming_like": self.set_streaming_like_action,
             "skip_ad": self.skip_ad_action,
             "click_play_small": self.click_play_small_action,
+            "set_shuffle_on": self.set_shuffle_on_action,
+            "set_shuffle_off": self.set_shuffle_off_action,
+            "set_cycle_one": self.set_cycle_one_action,
+            "set_cycle_off": self.set_cycle_off_action,
+            "set_cycle_on": self.set_cycle_on_action,
 
         }
 
@@ -591,3 +596,192 @@ class ScriptActions:
             logging.info("[CLICK_PLAY_SMALL_ACTION] Кнопка 'play_small' не найдена на экране.")
         except Exception as e:
             logging.error(f"[CLICK_PLAY_SMALL_ACTION] Ошибка: {e}")
+
+    async def set_shuffle_on_action(self, params):
+        """
+        Устанавливает режим shuffle в положение ON.
+        Проверяет наличие темплейта "shuffle_off". Если он есть, нажимает на кнопку для активации shuffle.
+        Если "shuffle_off" не найден, shuffle уже включен, действия не требуются.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.95)
+
+            # Проверяем наличие темплейта shuffle_off (shuffle выключен)
+            logging.info("[SET_SHUFFLE_ON_ACTION] Проверяем, включен ли shuffle.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if not screen_service.is_template_on_screen("shuffle_off", threshold):
+                logging.info("[SET_SHUFFLE_ON_ACTION] Shuffle уже включен. Действия не требуются.")
+                return
+
+            # Если shuffle выключен, ищем и нажимаем кнопку shuffle_off
+            logging.info("[SET_SHUFFLE_ON_ACTION] Shuffle выключен. Ищем кнопку 'shuffle_off'.")
+            if screen_service.is_template_on_screen("shuffle_off", threshold):
+                logging.info("[SET_SHUFFLE_ON_ACTION] Кнопка 'shuffle_off' найдена. Выполняем клик.")
+                screen_service.interact_with_template("shuffle_off", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта shuffle_on
+                if screen_service.is_template_on_screen("shuffle_on", threshold):
+                    logging.info("[SET_SHUFFLE_ON_ACTION] Shuffle успешно включен.")
+                else:
+                    logging.error("[SET_SHUFFLE_ON_ACTION] Не удалось включить shuffle. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_SHUFFLE_ON_ACTION] Кнопка 'shuffle_off' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_SHUFFLE_ON_ACTION] Ошибка: {e}")
+
+    async def set_shuffle_off_action(self, params):
+        """
+        Устанавливает режим shuffle в положение OFF.
+        Проверяет наличие темплейта "shuffle_on". Если он есть, нажимает на кнопку для отключения shuffle.
+        Если "shuffle_on" не найден, shuffle уже выключен, действия не требуются.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.95)
+
+            # Проверяем наличие темплейта shuffle_on (shuffle включен)
+            logging.info("[SET_SHUFFLE_OFF_ACTION] Проверяем, выключен ли shuffle.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if not screen_service.is_template_on_screen("shuffle_on", threshold):
+                logging.info("[SET_SHUFFLE_OFF_ACTION] Shuffle уже выключен. Действия не требуются.")
+                return
+
+            # Если shuffle включен, ищем и нажимаем кнопку shuffle_on
+            logging.info("[SET_SHUFFLE_OFF_ACTION] Shuffle включен. Ищем кнопку 'shuffle_on'.")
+            if screen_service.is_template_on_screen("shuffle_on", threshold):
+                logging.info("[SET_SHUFFLE_OFF_ACTION] Кнопка 'shuffle_on' найдена. Выполняем клик.")
+                screen_service.interact_with_template("shuffle_on", mouse_controller, threshold)
+
+                # Небольшая задержка после нажатия
+                await asyncio.sleep(2)
+
+                # Повторно проверяем наличие темплейта shuffle_off
+                if screen_service.is_template_on_screen("shuffle_off", threshold):
+                    logging.info("[SET_SHUFFLE_OFF_ACTION] Shuffle успешно выключен.")
+                else:
+                    logging.error("[SET_SHUFFLE_OFF_ACTION] Не удалось выключить shuffle. Проверьте шаблоны или приложение.")
+            else:
+                logging.error("[SET_SHUFFLE_OFF_ACTION] Кнопка 'shuffle_on' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[SET_SHUFFLE_OFF_ACTION] Ошибка: {e}")
+
+    async def set_cycle_one_action(self, params):
+        """
+        Устанавливает режим циклического воспроизведения в положение ONE (cycle_one).
+        Если cycle_one не найден, ищет и переключает cycle_on или cycle_off до достижения состояния cycle_one.
+        """
+        try:
+            threshold = params.get("threshold", 0.97)
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            logging.info("[SET_CYCLE_ONE_ACTION] Устанавливаем cycle в положение ONE.")
+
+            # Проверяем наличие темплейта cycle_one
+            for attempt in range(5):  # Пытаемся максимум 5 раз
+                if screen_service.is_template_on_screen("cycle_one", threshold):
+                    logging.info("[SET_CYCLE_ONE_ACTION] Cycle установлен в положение ONE.")
+                    return
+
+                # Ищем и переключаем cycle_on
+                if screen_service.is_template_on_screen("cycle_on", threshold):
+                    logging.info("[SET_CYCLE_ONE_ACTION] Найден cycle_on. Выполняем клик.")
+                    screen_service.interact_with_template("cycle_on", mouse_controller, threshold)
+                    await self._move_mouse_away_randomly("cycle_on", mouse_controller)
+                    await asyncio.sleep(1)
+                    continue
+
+                # Ищем и переключаем cycle_off
+                if screen_service.is_template_on_screen("cycle_off", threshold):
+                    logging.info("[SET_CYCLE_ONE_ACTION] Найден cycle_off. Выполняем клик.")
+                    screen_service.interact_with_template("cycle_off", mouse_controller, threshold)
+                    await self._move_mouse_away_randomly("cycle_off", mouse_controller)
+                    await asyncio.sleep(1)
+                    continue
+
+            logging.error("[SET_CYCLE_ONE_ACTION] Не удалось установить положение ONE. Проверьте темплейты.")
+        except Exception as e:
+            logging.error(f"[SET_CYCLE_ONE_ACTION] Ошибка: {e}")
+
+
+    async def _move_mouse_away_randomly(self, template_name, mouse_controller):
+        """
+        Отводит мышь на случайное расстояние после клика по темплейту.
+        """
+        try:
+            screen_service = ScreenService()
+            template_location = screen_service.get_template_location(template_name)
+
+            if template_location:
+                x, y, width, height = template_location
+
+                # Рассчитываем смещение
+                offset_x = random.randint(int(width * 0.05), int(width * 0.1))
+                offset_y = random.randint(int(height * 1), int(height * 1.5))
+
+                # Увеличиваем смещение для отведения мыши вниз
+                target_x = x + width // 2 + offset_x
+                target_y = y + height + offset_y
+
+                mouse_controller.move_to(target_x, target_y)
+                logging.info(f"[MOVE_MOUSE_AWAY] Мышь перемещена в точку: ({target_x}, {target_y}).")
+        except Exception as e:
+            logging.error(f"[MOVE_MOUSE_AWAY] Ошибка: {e}")
+
+
+    async def set_cycle_off_action(self, params):
+        """
+        Устанавливает режим циклического воспроизведения в положение OFF.
+        Один клик по cycle_one.
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Устанавливаем cycle_one
+            await self.set_cycle_one_action(params)
+
+            # Выполняем один клик по cycle_one для перехода в OFF
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+            logging.info("[SET_CYCLE_OFF_ACTION] Устанавливаем cycle в положение OFF.")
+
+            screen_service.interact_with_template("cycle_one", mouse_controller, threshold)
+            await asyncio.sleep(0.5)  # Небольшая задержка после клика
+
+            logging.info("[SET_CYCLE_OFF_ACTION] Завершено. Cycle установлен в положение OFF.")
+        except Exception as e:
+            logging.error(f"[SET_CYCLE_OFF_ACTION] Ошибка: {e}")
+
+
+    async def set_cycle_on_action(self, params):
+        """
+        Устанавливает режим циклического воспроизведения в положение ON.
+        Два клика по cycle_one.
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Устанавливаем cycle_one
+            await self.set_cycle_one_action(params)
+
+            # Выполняем два клика по cycle_one для перехода в ON
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+            logging.info("[SET_CYCLE_ON_ACTION] Устанавливаем cycle в положение ON.")
+
+            for _ in range(2):
+                screen_service.interact_with_template("cycle_one", mouse_controller, threshold)
+                await asyncio.sleep(0.5)  # Небольшая задержка между кликами
+
+            logging.info("[SET_CYCLE_ON_ACTION] Завершено. Cycle установлен в положение ON.")
+        except Exception as e:
+            logging.error(f"[SET_CYCLE_ON_ACTION] Ошибка: {e}")
+
