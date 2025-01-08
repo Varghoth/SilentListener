@@ -457,8 +457,8 @@ class AsyncSchedulerWindow(QMainWindow):
         for row in range(self.task_table.rowCount()):
             auto_start_checkbox = self.task_table.cellWidget(row, 0)
             if auto_start_checkbox and auto_start_checkbox.isChecked():
-                self.run_task(row)
-
+                logging.info(f"[UI] Автозапуск задачи в строке {row}")
+                self.loop.create_task(self.run_task(row))  # Используем асинхронный запуск задачи
 
 
     async def run_task(self, row):
@@ -482,9 +482,6 @@ class AsyncSchedulerWindow(QMainWindow):
 
         except Exception as e:
             logging.error(f"[UI] Ошибка при запуске задачи: {e}")
-
-
-
 
     def _get_widget_from_row(self, row, column, widget_type):
         """Получает виджет заданного типа из указанной строки и столбца таблицы.
@@ -516,9 +513,6 @@ class AsyncSchedulerWindow(QMainWindow):
         except Exception as e:
             logging.error(f"[UI] Ошибка при извлечении виджета из строки {row}, колонки {column}: {e}")
             return None
-
-
-
 
     async def start_task(self, script_path):
         if script_path in self.tasks:
