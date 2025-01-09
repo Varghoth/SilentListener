@@ -11,9 +11,6 @@ docker run -d -p 5901:5901 -v /c/Users/VARGHOTH/OneDrive/Desktop/COD/SilentListe
 docker exec -it test_kont bash
 
 #Остановка
-docker start test_kont
-
-#Остановка
 docker stop test_kont
 
 #Ремув (НАСТРОЙКИ СОТРУТСЯ!)
@@ -24,3 +21,27 @@ docker restart test_kont
 
 #Копирование DCA в конт
 docker cp DCA test_kont:/app/DCA
+
+#################################################################
+# FOR dca_container
+
+#Рестарт
+docker restart dca_container
+
+#Stop
+docker stop dca_container
+
+#Ремув (НАСТРОЙКИ СОТРУТСЯ!)
+docker rm dca_container
+
+#Start (запуск уже запускавшегося конта)
+docker start dca_container
+
+#Запуск
+docker run -d -p 5902:5901 --name dca_container dca_container
+
+#Работа внутри конта через консоль
+docker exec -it dca_container bash
+
+#Копирование каталога в конт (пример)
+docker cp DCA dca_container:/app/DCA

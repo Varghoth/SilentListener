@@ -4,6 +4,12 @@
             "name": "Основной цикл работы",
             "steps": [
                 {
+                    "action": "wait",
+                    "params": {
+                        "duration": 5
+                    }
+                },
+                {
                     "action": "make_firefox_focus",
                     "params": {}
                 },

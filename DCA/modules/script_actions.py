@@ -61,8 +61,12 @@ class ScriptActions:
     async def wait_action(self, params):
         try:
             duration = params.get("duration", 0)
-            logging.info(f"[WAIT_ACTION] Задержка {duration} секунд.")
-            await asyncio.sleep(duration)  # Убедитесь, что sleep выполняется в правильном цикле
+            random_offset = duration * 0.05  # 5% от длительности
+            randomized_duration = duration + random.uniform(-random_offset, random_offset)
+
+            logging.info(f"[WAIT_ACTION] Задержка {randomized_duration:.2f} секунд "
+                        f"(исходная {duration} секунд, рандомизация ±5%).")
+            await asyncio.sleep(randomized_duration)  # Убедитесь, что sleep выполняется в правильном цикле
             logging.info("[WAIT_ACTION] Задержка завершена.")
         except asyncio.CancelledError:
             logging.info("[WAIT_ACTION] Задержка отменена.")

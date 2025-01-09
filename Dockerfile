@@ -18,38 +18,51 @@ RUN apt-get update && \
     xfonts-75dpi \
     ca-certificates \
     bzip2 \
-    pyautogui \
     python3-tk \
     python3-dev \
     build-essential \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    pillow \
     gnome-screenshot \
-    qasync \
     x11-xkb-utils \
     xserver-xorg-core \
     mousepad \
-    pytesseract \
+    tesseract-ocr \
+    supervisor \
+    nano \
     arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-    # Установка Python-зависимостей
-    RUN pip install --no-cache-dir opencv-python-headless
+    # Установка Python и pip
+    RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*
+
+    # Установка Python-зависимостей через pip
+    RUN pip3 install --no-cache-dir \
+        pyautogui \
+        pillow \
+        qasync \
+        pytesseract \
+        opencv-python-headless
+
+    # Установка PyQt5 через apt и pip
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3-pyqt5 \
+        python3-pyqt5.qtquick && \
+        pip3 install --no-cache-dir PyQt5 PyQt5-sip && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*
 
     # Установка PulseAudio
-    RUN apt-get update && apt-get install -y pulseaudio && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    RUN apt-get update && apt-get install -y --no-install-recommends pulseaudio && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*
 
-    # Создание конфигурации для PulseAudio
+    # Настройка PulseAudio
     RUN mkdir -p /root/.config/pulse/ && \
-    echo "autospawn = yes" > /root/.config/pulse/client.conf && \
-    echo "exit-idle-time = -1" > /root/.config/pulse/daemon.conf
-
-    # Установка vncsnapshot необходимая для захвата изображения из конта
-    RUN apt-get update && apt-get install -y vncsnapshot
+        echo "autospawn = yes" > /root/.config/pulse/client.conf && \
+        echo "exit-idle-time = -1" > /root/.config/pulse/daemon.conf
 
 ############################# [START] Установка Firefox #############################
 # Используем --no-check-certificate для обхода ошибки сертификатов
@@ -76,17 +89,9 @@ RUN mkdir -p /root/.mozilla/firefox/default-release && \
 ############################# [END] Установка Firefox #############################
 
 ############################# [START] Установка DCA #############################
-# Установка только необходимых зависимостей
-RUN apt-get update && apt-get install -y \
-    python3-pyqt5 \
-    python3-pip \
-    tesseract-ocr \
-    && apt-get clean
-
-# Копируем код DCA
-#COPY DCA /app/DCA
-#WORKDIR /app/DCA
-
+# Копируем директорию DCA в контейнер
+COPY DCA /app/DCA
+WORKDIR /app/DCA
 ############################# [END] Установка DCA #############################
 
 # Сжатие памяти
@@ -116,12 +121,20 @@ RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup
 COPY fox.blocked.settings/autoconfig.js /opt/firefox/defaults/pref/autoconfig.js
 COPY fox.blocked.settings/firefox.cfg /opt/firefox/firefox.cfg
 
-# Установка темы Arc-Dark
-RUN echo '#!/bin/sh\n\
-sleep 2\n\
-xfconf-query -c xsettings -p /Net/ThemeName -s "Arc-Dark"\n\
-xfconf-query -c xsettings -p /Net/IconThemeName -s "elementary"' > /root/.vnc/apply-theme.sh && \
-    chmod +x /root/.vnc/apply-theme.sh
+############################# [START] SUPERVISORD #############################
+
+# Устанавливаем supervisord
+RUN apt-get update && apt-get install -y --no-install-recommends supervisor && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Копируем конфигурацию supervisord
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+
+# Настраиваем директорию для supervisord
+RUN mkdir -p /var/log/supervisor
+
+############################# [-END-] SUPERVISORD #############################
 
 # Копируем скрипт запуска
 COPY start.sh /usr/local/bin/start.sh
@@ -130,5 +143,12 @@ RUN chmod +x /usr/local/bin/start.sh
 # Глобальные переменные
 ENV DISPLAY=:1
 
+# Установка темы Arc-Dark
+RUN echo '#!/bin/sh\n\
+sleep 2\n\
+xfconf-query -c xsettings -p /Net/ThemeName -s "Arc-Dark"\n\
+xfconf-query -c xsettings -p /Net/IconThemeName -s "elementary"' > /root/.vnc/apply-theme.sh && \
+    chmod +x /root/.vnc/apply-theme.sh
+
 # Устанавливаем команду запуска
-CMD ["/usr/local/bin/start.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

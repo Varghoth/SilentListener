@@ -1,0 +1,8 @@
+[
+    {
+        "auto_start": true,
+        "script_path": "/app/DCA/scripts/main_script.json",
+        "start_time": "",
+        "end_time": ""
+    }
+]
