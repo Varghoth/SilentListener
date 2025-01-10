@@ -2,6 +2,7 @@
 
 # Ждем, пока VNC полностью запустится
 for i in {1..10}; do
+    export DISPLAY=:1
     if pgrep Xtightvnc > /dev/null; then
         echo "VNC is running, starting DCA..."
         python3 /app/DCA/agent.py

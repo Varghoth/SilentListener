@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  dca:
+    build: .
+    container_name: dca_container  # Указание имени контейнера
+    restart: always
+    environment:
+      - DISPLAY=:1
+    volumes:
+      - ./DCA:/app/DCA
+    ports:
+      - "5902:5901"

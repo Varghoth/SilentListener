@@ -26,4 +26,5 @@ tightvncserver :1 -geometry 1280x720 -depth 24
 # Применяем тему Arc-Dark
 /root/.vnc/apply-theme.sh
 
-# Скрипт завершает работу, так как supervisord будет следить за процессом
+# Оставляем контейнер в рабочем состоянии
+tail -f /dev/null

@@ -1,0 +1,30 @@
+{
+    "delay": {
+        "min": 0.16,
+        "max": 0.69
+    },
+    "bezier_curve_strength": {
+        "min": 0.23,
+        "max": 0.78
+    },
+    "steps_main": {
+        "min": 12,
+        "max": 28
+    },
+    "steps_correction": {
+        "min": 3,
+        "max": 5
+    },
+    "template_offset": {
+        "min": 0.09,
+        "max": 0.23
+    },
+    "scroll_amount": {
+        "min": 4,
+        "max": 9
+    },
+    "scroll_delay": {
+        "min": 0.25,
+        "max": 0.45
+    }
+}
