@@ -50,32 +50,56 @@ class TaskManager:
 
     async def start_task(self, script_path):
         """
-        Запускает выполнение заданий из JSON-скрипта.
+        Запускает выполнение скрипта.
         :param script_path: Путь к JSON-скрипту.
         """
         try:
             with open(script_path, "r") as file:
                 script = json.load(file)
 
-            while True:  # Циклическое выполнение
-                logging.info(f"[TaskManager] Выполнение скрипта: {script_path}")
-
-                for block in script.get("blocks", []):
-                    logging.info(f"[TaskManager] Выполнение блока: {block.get('name', 'Unnamed Block')}")
+            # Выполняем первый блок (инициализация)
+            init_block = next(
+                (block for block in script.get("blocks", []) if block.get("name") == "Инициализация"),
+                None
+            )
+            if init_block:
+                logging.info("[TaskManager] Выполнение блока инициализации.")
+                for step in init_block.get("steps", []):
+                    action_name = step.get("action")
+                    params = step.get("params", {})
                     
-                    for step in block.get("steps", []):
-                        action_name = step.get("action")
-                        params = step.get("params", {})
-                        
-                        logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
-                        action = self.actions.get_action(action_name)
-                        
-                        if action:
-                            await action(params)
-                        else:
-                            logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+                    logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                    action = self.actions.get_action(action_name)
+                    
+                    if action:
+                        await action(params)
+                    else:
+                        logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+
+            # Циклическое выполнение основного блока
+            while True:
+                main_block = next(
+                    (block for block in script.get("blocks", []) if block.get("name") == "Основной цикл работы"),
+                    None
+                )
+                if not main_block:
+                    logging.error("[TaskManager] Основной блок не найден.")
+                    break
+
+                logging.info("[TaskManager] Выполнение основного цикла работы.")
+                for step in main_block.get("steps", []):
+                    action_name = step.get("action")
+                    params = step.get("params", {})
+                    
+                    logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                    action = self.actions.get_action(action_name)
+                    
+                    if action:
+                        await action(params)
+                    else:
+                        logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
                 
-                logging.info("[TaskManager] Завершение текущего цикла выполнения. Ожидание перед перезапуском...")
+                logging.info("[TaskManager] Завершение одного цикла выполнения. Ожидание перед перезапуском...")
                 await asyncio.sleep(2)  # Небольшая пауза перед новым запуском
         except Exception as e:
             logging.error(f"[TaskManager] Ошибка выполнения скрипта {script_path}: {e}")

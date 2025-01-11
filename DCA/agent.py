@@ -4,6 +4,7 @@ from qasync import QEventLoop
 import asyncio
 import sys
 
+
 def main():
     # Создаём приложение
     app = QApplication(sys.argv)

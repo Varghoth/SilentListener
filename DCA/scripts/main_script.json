@@ -1,12 +1,71 @@
 {
     "blocks": [
         {
-            "name": "Основной цикл работы",
+            "name": "Инициализация",
             "steps": [
                 {
                     "action": "wait",
                     "params": {
                         "duration": 5
+                    }
+                },
+                {
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_play",
+                    "params": {}
+                },
+                {
+                    "action": "set_streaming_unfold",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "random_action",
+                    "params": {
+                        "probabilities": {
+                            "set_cycle_oneclick": 70,
+                            "click_play_small": 10,
+                            "set_shuffle_on": 20
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Основной цикл работы",
+            "steps": [
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
                     }
                 },
                 {
@@ -52,7 +111,7 @@
                             "set_streaming_backward": 2,
                             "click_play_small": 2,
                             "set_cycle_on": 5,
-                            "set_cycle_off": 2,
+                            "set_cycle_off": 1,
                             "set_shuffle_on": 3,
                             "set_shuffle_off": 3,
                             "set_streaming_fold": 1

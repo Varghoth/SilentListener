@@ -46,6 +46,7 @@ class ScriptActions:
             "set_shuffle_off": self.set_shuffle_off_action,
             "set_cycle_one": self.set_cycle_one_action,
             "set_cycle_off": self.set_cycle_off_action,
+            "set_cycle_oneclick": self.set_cycle_oneclick_action,
             "set_cycle_on": self.set_cycle_on_action,
             "random_action": self.random_action,
 
@@ -813,4 +814,23 @@ class ScriptActions:
             logging.info("[SET_CYCLE_ON_ACTION] Завершено. Cycle установлен в положение ON.")
         except Exception as e:
             logging.error(f"[SET_CYCLE_ON_ACTION] Ошибка: {e}")
+    
+    async def set_cycle_oneclick_action(self, params):
+        """
+        Один клик по темплейту cycle.
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Выполняем один клик по cycle
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+            logging.info("[SET_CYCLE_ONECLICK] Выполняем один клик по cycle.")
+
+            screen_service.interact_with_template("cycle_off", mouse_controller, threshold)
+            await asyncio.sleep(0.5)  # Небольшая задержка после клика
+
+            logging.info("[SET_CYCLE_ONECLICK] Завершено. Cycle нажат.")
+        except Exception as e:
+            logging.error(f"[SET_CYCLE_ONECLICK] Ошибка: {e}")
 
