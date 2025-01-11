@@ -52,8 +52,9 @@
                     "params": {
                         "probabilities": {
                             "set_cycle_oneclick": 70,
-                            "click_play_small": 10,
-                            "set_shuffle_on": 20
+                            "scroll_and_click": 10,
+                            "set_shuffle_on": 15,
+                            "fast_scroll_up_and_click": 5
                         }
                     }
                 }
@@ -109,12 +110,13 @@
                             "set_streaming_pause": 5,
                             "set_streaming_forward": 3,
                             "set_streaming_backward": 2,
-                            "click_play_small": 2,
+                            "scroll_and_click": 2,
                             "set_cycle_on": 5,
                             "set_cycle_off": 1,
                             "set_shuffle_on": 3,
                             "set_shuffle_off": 3,
-                            "set_streaming_fold": 1
+                            "set_streaming_fold": 1,
+                            "fast_scroll_up_and_click": 2
                         }
                     }
                 },

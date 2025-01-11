@@ -49,6 +49,8 @@ class ScriptActions:
             "set_cycle_oneclick": self.set_cycle_oneclick_action,
             "set_cycle_on": self.set_cycle_on_action,
             "random_action": self.random_action,
+            "scroll_and_click": self.scroll_and_click_action,
+            "fast_scroll_up_and_click": self.fast_scroll_up_and_click_action,
 
         }
 
@@ -455,7 +457,7 @@ class ScriptActions:
                     template_x, template_y, template_width, template_height = template_location
 
                     # Сдвигаем мышь вниз относительно высоты темплейта
-                    random_y_offset = random.uniform(2 * template_height, 6 * template_height)
+                    random_y_offset = random.uniform(4 * template_height, 6 * template_height)
                     target_x = template_x + template_width // 2
                     target_y = template_y + random_y_offset
 
@@ -833,4 +835,54 @@ class ScriptActions:
             logging.info("[SET_CYCLE_ONECLICK] Завершено. Cycle нажат.")
         except Exception as e:
             logging.error(f"[SET_CYCLE_ONECLICK] Ошибка: {e}")
+
+    async def scroll_and_click_action(self, params):
+        """
+        Последовательно выполняет scrolling_action и click_play_small_action.
+        """
+        try:
+            logging.info("[SCROLL_AND_CLICK_ACTION] Начало выполнения.")
+            
+            # Выполнение scrolling_action
+            await self.scrolling_action({})
+            logging.info("[SCROLL_AND_CLICK_ACTION] scrolling_action выполнено.")
+            
+            # Выполнение click_play_small_action
+            await self.click_play_small_action({})
+            logging.info("[SCROLL_AND_CLICK_ACTION] click_play_small_action выполнено.")
+            
+        except Exception as e:
+            logging.error(f"[SCROLL_AND_CLICK_ACTION] Ошибка: {e}")
+
+    async def fast_scroll_up_and_click_action(self, params):
+        """
+        Быстро пролистывает плейлист вверх с использованием scrolling_action и выполняет click_play_small_action.
+        """
+        try:
+            logging.info("[FAST_SCROLL_UP_AND_CLICK_ACTION] Начало выполнения.")
+
+            # Рандомизация параметров прокрутки
+            scroll_steps = random.randint(1, 3)  # Количество прокруток (3-7 раз)
+            logging.info(f"[FAST_SCROLL_UP_AND_CLICK_ACTION] Выполняется {scroll_steps} прокруток вверх.")
+            
+            # Выполнение scrolling_action с параметрами
+            for _ in range(scroll_steps):
+                await self.scrolling_action({
+                    "direction": "up",  # Направление прокрутки - вверх
+                    "steps": random.randint(5, 10)  # Количество шагов в одном прокручивании
+                })
+                delay = random.uniform(0.01, 0.03)  # Рандомная задержка между прокрутками
+                await asyncio.sleep(delay)
+                logging.info(f"[FAST_SCROLL_UP_AND_CLICK_ACTION] Прокрутка вверх выполнена с задержкой {delay:.2f} сек.")
+
+            logging.info("[FAST_SCROLL_UP_AND_CLICK_ACTION] Быстрая прокрутка вверх завершена.")
+
+            # Выполнение click_play_small_action
+            await self.click_play_small_action({})
+            logging.info("[FAST_SCROLL_UP_AND_CLICK_ACTION] click_play_small_action выполнено.")
+            
+        except Exception as e:
+            logging.error(f"[FAST_SCROLL_UP_AND_CLICK_ACTION] Ошибка: {e}")
+
+
 
