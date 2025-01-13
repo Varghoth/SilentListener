@@ -2,6 +2,7 @@ import subprocess
 import logging
 import asyncio
 import pyautogui
+import json
 import time
 import cv2
 import numpy as np
@@ -936,8 +937,36 @@ class ScriptActions:
 
 ############################ [START] Сбор Плейлистов ############################
     async def check_first_launch_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+        """
+        Проверяет, является ли текущий запуск первым за день.
+        Сохраняет дату последнего запуска в конфигурационном файле.
+        """
+        try:
+            config_file = os.path.join(self.project_dir, "launch_config.json")
+
+            # Загружаем конфигурацию, если файл существует
+            if os.path.exists(config_file):
+                with open(config_file, "r", encoding="utf-8") as file:
+                    config = json.load(file)
+            else:
+                config = {}
+
+            today = time.strftime("%Y-%m-%d")  # Текущая дата в формате YYYY-MM-DD
+
+            if config.get("last_launch") == today:
+                logging.info("[CHECK_FIRST_LAUNCH] Сегодня запуск уже был.")
+                return False
+
+            # Обновляем дату последнего запуска
+            config["last_launch"] = today
+            with open(config_file, "w", encoding="utf-8") as file:
+                json.dump(config, file, ensure_ascii=False, indent=4)
+
+            logging.info("[CHECK_FIRST_LAUNCH] Это первый запуск за сегодня.")
+            return True
+        except Exception as e:
+            logging.error(f"[CHECK_FIRST_LAUNCH] Ошибка: {e}")
+            return False
     
     async def select_artist_action(self, params):
         """Заглушка."""
