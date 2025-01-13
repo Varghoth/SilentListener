@@ -76,6 +76,29 @@ class TaskManager:
                     else:
                         logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
 
+
+            # Выполняем блок "Сбор плейлистов"
+            playlist_block = next(
+                (block for block in script.get("blocks", []) if block.get("name") == "Сбор плейлистов"),
+                None
+            )
+            if playlist_block:
+                logging.info("[TaskManager] Выполнение блока сбора плейлистов.")
+                for step in playlist_block.get("steps", []):
+                    action_name = step.get("action")
+                    params = step.get("params", {})
+
+                    logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                    action = self.actions.get_action(action_name)
+
+                    if action:
+                        await action(params)
+                    else:
+                        logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+            else:
+                logging.info("[TaskManager] Блок сбора плейлистов отсутствует.")
+
+
             # Циклическое выполнение основного блока
             while True:
                 main_block = next(

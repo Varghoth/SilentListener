@@ -33,6 +33,7 @@ class ScriptActions:
             ###################### Управление Стримингами ######################
             "do_nothing": self.do_nothing,
             "set_streaming_play": self.set_streaming_play_action,
+            "random_play": self.random_play_action,
             "set_streaming_pause": self.set_streaming_pause_action,
             "set_streaming_unfold": self.set_streaming_unfold_action,
             "set_streaming_fold": self.set_streaming_fold_action,
@@ -51,6 +52,13 @@ class ScriptActions:
             "random_action": self.random_action,
             "scroll_and_click": self.scroll_and_click_action,
             "fast_scroll_up_and_click": self.fast_scroll_up_and_click_action,
+            ###################### Сбор Плейлистов ######################
+            "check_first_launch": self.check_first_launch_action,
+            "select_artist": self.select_artist_action,
+            "open_albums_tab": self.open_albums_tab_action,
+            "recognize_albums": self.recognize_albums_action,
+            "select_random_album": self.select_random_album_action,
+            "play_album_track": self.play_album_track_action,
 
         }
 
@@ -275,6 +283,46 @@ class ScriptActions:
                 logging.error("[SET_STREAMING_PLAY_ACTION] Кнопка 'play' не найдена. Проверьте шаблоны.")
         except Exception as e:
             logging.error(f"[SET_STREAMING_PLAY_ACTION] Ошибка: {e}")
+
+    async def random_play_action(self, params):
+        """
+        Выполняет один из случайных вариантов действия 'Play':
+        - Масштабная прокрутка вверх + Play
+        - Цикл + Play
+        - Чистый Play
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            # Проверяем наличие темплейта pause (музыка воспроизводится)
+            logging.info("[SET_STREAMING_PLAY_ACTION] Проверяем, воспроизводится ли музыка.")
+            screen_service = ScreenService()
+
+            if screen_service.is_template_on_screen("pause", threshold):
+                logging.info("[SET_STREAMING_PLAY_ACTION] Музыка уже воспроизводится. Действия не требуются.")
+                return # Если воспроизводится, прерываем выполнение
+            
+            probabilities = {
+                "scroll_up_play": 34,  # Масштабная прокрутка вверх + Play
+                "cycle_play": 33,      # Цикл + Play
+                "pure_play": 33        # Чистый Play
+            }
+
+            # Выбираем действие случайно
+            chosen_action = random.choices(list(probabilities.keys()), weights=list(probabilities.values()), k=1)[0]
+            logging.info(f"[RANDOM_PLAY_ACTION] Выбрано действие: {chosen_action}")
+
+            # Вызов соответствующей функции
+            if chosen_action == "scroll_up_play":
+                await self.fast_scroll_up_and_click_action({})
+                await self.set_streaming_play_action({})
+            elif chosen_action == "cycle_play":
+                await self.set_cycle_on_action({})
+                await self.set_streaming_play_action({})
+            elif chosen_action == "pure_play":
+                await self.set_streaming_play_action({})
+        except Exception as e:
+            logging.error(f"[RANDOM_PLAY_ACTION] Ошибка: {e}")
 
     async def set_streaming_pause_action(self, params):
         """
@@ -884,5 +932,30 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[FAST_SCROLL_UP_AND_CLICK_ACTION] Ошибка: {e}")
 
+############################ [END] Управление стримингами ############################
 
+############################ [START] Сбор Плейлистов ############################
+    async def check_first_launch_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+    
+    async def select_artist_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+    
+    async def open_albums_tab_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+    
+    async def recognize_albums_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+    
+    async def select_random_album_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
 
+    async def play_album_track_action(self, params):
+        """Заглушка."""
+        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+############################ [-END-] Сбор Плейлистов ############################

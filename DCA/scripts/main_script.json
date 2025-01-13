@@ -61,6 +61,56 @@
             ]
         },
         {
+            "name": "Сбор плейлистов",
+            "steps": [
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Начинаем сбор плейлистов"
+                    }
+                },
+                {
+                    "action": "check_first_launch",
+                    "params": {}
+                },
+                {
+                    "action": "select_artist",
+                    "params": {
+                        "probabilities": {
+                            "our_artist": 34,
+                            "other_artist": 66
+                        }
+                    }
+                },
+                {
+                    "action": "open_albums_tab",
+                    "params": {}
+                },
+                {
+                    "action": "recognize_albums",
+                    "params": {
+                        "max_albums": 10
+                    }
+                },
+                {
+                    "action": "select_random_album",
+                    "params": {}
+                },
+                {
+                    "action": "play_album_track",
+                    "params": {
+                        "like_probability": 15
+                    }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Сбор плейлистов завершён"
+                    }
+                }
+            ]
+        },
+        {
             "name": "Основной цикл работы",
             "steps": [
                 {
@@ -82,7 +132,7 @@
                     "params": {}
                 },
                 {
-                    "action": "set_streaming_play",
+                    "action": "random_play",
                     "params": {}
                 },
                 {
