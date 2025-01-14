@@ -58,9 +58,9 @@ class ScriptActions:
             "click_search": self.click_search_action,
             "select_artist": self.select_artist_action,
             "open_albums_tab": self.open_albums_tab_action,
-            "recognize_albums": self.recognize_albums_action,
             "select_random_album": self.select_random_album_action,
-            "play_album_track": self.play_album_track_action,
+            "collect_playlist_tracks": self.collect_playlist_tracks_action,
+            "return_to_liked_music": self.return_to_liked_music_action,
 
         }
 
@@ -972,7 +972,6 @@ class ScriptActions:
             logging.error(f"[CHECK_FIRST_LAUNCH] Ошибка: {e}")
             return False
     
-    
     async def click_search_action(self, params):
         """
         Нажимает кнопку "search".
@@ -994,24 +993,256 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[CLICK_SEARCH_ACTION] Ошибка: {e}")
 
-
     async def select_artist_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
-    
-    async def open_albums_tab_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
-    
-    async def recognize_albums_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
-    
-    async def select_random_album_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+        """
+        Выбирает жанр из конфига (или создаёт новый), определяет случайного артиста 
+        из белого списка и вводит его имя в строку поиска.
+        :param params: Параметры действия.
+        """
+        try:
+            # Определяем каталог для хранения конфигов и белых списков
+            configs_dir = os.path.join(self.project_dir, "configs")
+            white_list_file = os.path.join(configs_dir, "white_list.json")
+            config_file = os.path.join(configs_dir, "playlist_config.json")
 
-    async def play_album_track_action(self, params):
-        """Заглушка."""
-        logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")
+            os.makedirs(configs_dir, exist_ok=True)  # Создаём каталог, если его нет
+
+            # Проверяем наличие white_list.json
+            if not os.path.exists(white_list_file):
+                logging.error("[SELECT_ARTIST_ACTION] Файл white_list.json не найден.")
+                return
+
+            # Загружаем white_list.json
+            with open(white_list_file, "r", encoding="utf-8") as file:
+                white_list = json.load(file)
+
+            # Проверяем или создаём конфиг
+            if os.path.exists(config_file):
+                with open(config_file, "r", encoding="utf-8") as file:
+                    config = json.load(file)
+            else:
+                # Если конфига нет, создаём его с случайным жанром из доступных
+                available_genres = list(white_list.keys())
+                selected_genre = random.choice(available_genres)
+                config = {"genre": selected_genre}
+                with open(config_file, "w", encoding="utf-8") as file:
+                    json.dump(config, file, ensure_ascii=False, indent=4)
+                logging.info(f"[SELECT_ARTIST_ACTION] Новый конфиг создан с жанром: {selected_genre}")
+
+            # Получаем жанр из конфига
+            selected_genre = config.get("genre")
+            logging.info(f"[SELECT_ARTIST_ACTION] Выбран жанр: {selected_genre}")
+
+            if selected_genre not in white_list:
+                logging.error(f"[SELECT_ARTIST_ACTION] Жанр {selected_genre} отсутствует в white_list.json.")
+                return
+
+            # Определяем артиста с заданными вероятностями
+            artist_source = random.choices(
+                ["our_artists", "external_artists"],
+                weights=[34, 66],
+                k=1
+            )[0]
+
+            if artist_source in white_list[selected_genre]:
+                artist_list = white_list[selected_genre][artist_source]
+                if not artist_list:
+                    logging.error(f"[SELECT_ARTIST_ACTION] Список {artist_source} для жанра {selected_genre} пуст.")
+                    return
+                artist = random.choice(artist_list)
+                logging.info(f"[SELECT_ARTIST_ACTION] Выбран артист: {artist} ({artist_source})")
+            else:
+                logging.error(f"[SELECT_ARTIST_ACTION] Источник {artist_source} отсутствует в жанре {selected_genre}.")
+                return
+            
+            await asyncio.sleep(random.uniform(0.7, 2.0))  # Эмуляция естественной задержки
+
+            # Вводим имя артиста в строку поиска
+            logging.info(f"[SELECT_ARTIST_ACTION] Ввод имени артиста в строку поиска: {artist}")
+            for char in artist:
+                pyautogui.typewrite(char)
+                await asyncio.sleep(random.uniform(0.05, 0.1))  # Эмуляция естественной задержки
+
+            await asyncio.sleep(random.uniform(1.0, 2.1))  # Эмуляция естественной задержки
+
+            # Выполняем поиск (Enter)
+            pyautogui.press("enter")
+            logging.info("[SELECT_ARTIST_ACTION] Поиск выполнен.")
+
+        except Exception as e:
+            logging.error(f"[SELECT_ARTIST_ACTION] Ошибка: {e}")
+
+    async def open_albums_tab_action(self, params):
+        """
+        Ищет темплейт album на экране и кликает по нему.
+        :param params: Параметры действия, такие как "threshold" для порога совпадения.
+        """
+        try:
+            threshold = params.get("threshold", 0.8)  # Порог совпадения по умолчанию
+            logging.info("[OPEN_ALBUMS_TAB_ACTION] Начинаем поиск темплейта album.")
+
+            # Инициализация ScreenService и MouseController
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Проверяем наличие темплейта "album"
+            if screen_service.is_template_on_screen("albums", threshold):
+                logging.info("[OPEN_ALBUMS_TAB_ACTION] Темплейт album найден. Выполняем клик.")
+
+                # Выполняем клик по найденному темплейту
+                if screen_service.interact_with_template("albums", mouse_controller, threshold):
+                    logging.info("[OPEN_ALBUMS_TAB_ACTION] Клик по темплейту album выполнен успешно.")
+                else:
+                    logging.error("[OPEN_ALBUMS_TAB_ACTION] Не удалось взаимодействовать с темплейтом album.")
+            else:
+                logging.error("[OPEN_ALBUMS_TAB_ACTION] Темплейт album не найден. Проверьте наличие шаблона.")
+
+        except Exception as e:
+            logging.error(f"[OPEN_ALBUMS_TAB_ACTION] Ошибка: {e}")    
+    
+
+    async def select_random_album_action(self, params):
+        """
+        Выбирает случайный альбом на экране из доступных темплейтов и запускает его воспроизведение.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            logging.info("[SELECT_RANDOM_ALBUM_ACTION] Поиск темплейта albums для позиционирования.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Определяем координаты якорного темплейта "albums"
+            if screen_service.is_template_on_screen("albums", threshold):
+                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' найден.")
+                template_location = screen_service.get_template_location("albums", threshold)
+
+                if template_location:
+                    template_x, template_y, template_width, template_height = template_location
+
+                    # Сдвигаем мышь вниз относительно высоты темплейта "albums"
+                    random_y_offset = random.uniform(4 * template_height, 6 * template_height)
+                    target_x = template_x + template_width // 2
+                    target_y = template_y + random_y_offset
+
+                    mouse_controller.move_to(int(target_x), int(target_y))
+                    logging.info(f"[SELECT_RANDOM_ALBUM_ACTION] Мышь позиционирована в точку ({target_x}, {target_y}).")
+
+                    # Выполняем случайный скроллинг или пропускаем его
+                    if random.choice([True, False]):
+                        await asyncio.sleep(0.5)
+                        direction = random.choice(["up", "down"])
+                        steps = random.randint(1, 3)
+                        for _ in range(steps):
+                            pyautogui.scroll(-1 if direction == "down" else 1)
+                            await asyncio.sleep(random.uniform(0.2, 0.5))
+                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг выполнен.")
+                    else:
+                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг пропущен.")
+
+                    # Используем target_template для наведения на случайный альбом
+                    logging.info("[SELECT_RANDOM_ALBUM_ACTION] Поиск и наведение на случайный альбом.")
+                    if screen_service.target_template("choose_album", mouse_controller, threshold):
+                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Наведение на случайный альбом выполнено успешно.")
+
+                        # Выполняем click_play_small_action для запуска воспроизведения
+                        await self.click_play_small_action({})
+                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Воспроизведение альбома запущено.")
+                    else:
+                        logging.error("[SELECT_RANDOM_ALBUM_ACTION] Темплейты 'choose_album' не найдены.")
+                        return
+                else:
+                    logging.error("[SELECT_RANDOM_ALBUM_ACTION] Не удалось определить координаты темплейта 'albums'.")
+                    return
+            else:
+                logging.error("[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' не найден. Проверьте шаблоны.")
+                return
+
+        except Exception as e:
+            logging.error(f"[SELECT_RANDOM_ALBUM_ACTION] Ошибка: {e}")
+
+    async def collect_playlist_tracks_action(self, params):
+        """
+        Сбор треков с периодической проверкой и проставлением лайков.
+        :param params: Параметры действия, такие как "like_probability" (вероятность вызова set_streaming_like).
+        """
+        try:
+            # Устанавливаем временные рамки для сбора
+            collection_duration = random.randint(300, 1800)  # (300, 1800) - 5–30 минут в секундах
+            start_time = time.time()
+            end_time = start_time + collection_duration
+            logging.info(f"[COLLECT_PLAYLIST_TRACKS_ACTION] Сбор треков начат. Длительность: {collection_duration // 60} минут.")
+
+            # Вероятность вызова set_streaming_like
+            like_probability = params.get("like_probability", 15)  # По умолчанию 15%
+
+            while time.time() < end_time:
+                # Случайный интервал между итерациями (30–60 секунд)
+                wait_time = random.randint(30, 60)
+                await asyncio.sleep(wait_time)
+                logging.info(f"[COLLECT_PLAYLIST_TRACKS_ACTION] Пауза завершена. Интервал: {wait_time} секунд.")
+
+                # Вероятностный вызов set_streaming_like
+                if random.randint(1, 100) <= like_probability:
+                    logging.info("[COLLECT_PLAYLIST_TRACKS_ACTION] Пытаемся поставить лайк текущему треку.")
+                    await self.set_streaming_like_action({})
+
+            logging.info("[COLLECT_PLAYLIST_TRACKS_ACTION] Сбор треков завершён.")
+        except Exception as e:
+            logging.error(f"[COLLECT_PLAYLIST_TRACKS_ACTION] Ошибка: {e}")
+
+
+    async def return_to_liked_music_action(self, params):
+        """
+        Возвращает проигрывание на плейлист 'Liked Music'.
+        Наводится или нажимает на темплейт 'liked_music' с вероятностью 50%,
+        затем нажимает на 'liked_music_action'.
+        """
+        try:
+            threshold = params.get("threshold", 0.9)  # Порог совпадения по умолчанию
+            logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Начало выполнения.")
+
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Проверяем наличие темплейта liked_music
+            if screen_service.is_template_on_screen("liked_music", threshold):
+                logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music' найден.")
+                template_location = screen_service.get_template_location("liked_music", threshold)
+
+                if template_location:
+                    x, y, width, height = template_location
+                    target_x = x + width // 2
+                    target_y = y + height // 2
+
+                    # Наведение или нажатие на темплейт 'liked_music' с вероятностью 50%
+                    if random.choice([True, False]):
+                        mouse_controller.move_to(target_x, target_y)
+                        logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Наведение на темплейт 'liked_music'.")
+                    else:
+                        mouse_controller.move_to(target_x, target_y)
+                        mouse_controller.click()
+                        logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Нажатие на темплейт 'liked_music'.")
+                else:
+                    logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Не удалось определить координаты темплейта 'liked_music'.")
+                    return
+            else:
+                logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music' не найден.")
+                return
+
+            # Нажатие на темплейт 'liked_music_action'
+            logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Ищем темплейт 'liked_music_action'.")
+            if screen_service.is_template_on_screen("liked_music_action", threshold):
+                logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music_action' найден. Выполняем нажатие.")
+                if screen_service.interact_with_template("liked_music_action", mouse_controller, threshold):
+                    logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Нажатие на 'liked_music_action' выполнено успешно.")
+                else:
+                    logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Не удалось выполнить нажатие на 'liked_music_action'.")
+            else:
+                logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music_action' не найден. Проверьте шаблоны.")
+
+        except Exception as e:
+            logging.error(f"[RETURN_TO_LIKED_MUSIC_ACTION] Ошибка: {e}")
+
 ############################ [-END-] Сбор Плейлистов ############################

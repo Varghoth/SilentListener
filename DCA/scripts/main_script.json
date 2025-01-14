@@ -74,6 +74,14 @@
                     "params": {}
                 },
                 {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
                     "action": "click_search",
                     "params": {}
                 },
@@ -87,13 +95,19 @@
                     }
                 },
                 {
+                    "action": "wait",
+                    "params": {
+                        "duration": 3
+                    }
+                },
+                {
                     "action": "open_albums_tab",
                     "params": {}
                 },
                 {
-                    "action": "recognize_albums",
+                    "action": "wait",
                     "params": {
-                        "max_albums": 10
+                        "duration": 2
                     }
                 },
                 {
@@ -101,9 +115,15 @@
                     "params": {}
                 },
                 {
-                    "action": "play_album_track",
+                    "action": "collect_playlist_tracks",
                     "params": {
                         "like_probability": 15
+                    }
+                },
+                {
+                    "action": "return_to_liked_music",
+                    "params": {
+                        "message": "Возвращаемся к плейлисту Liked Music"
                     }
                 },
                 {

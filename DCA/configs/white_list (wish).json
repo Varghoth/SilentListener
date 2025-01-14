@@ -1,0 +1,21 @@
+{
+    "electronic": {
+        "our_artists": ["DobraVibe", "BLACK MEDICALS", "BassAdrenaline", "Feral7"],
+        "external_artists": ["Океан Ельзи", "The Hardkiss", "DakhaBrakha", "ONUKA", "KAZKA", "Cape Cod",
+        "MONOCONDA", "Freel", "Vakula", "Koloah", "Heinali"]
+    },
+    "rock": {
+        "our_artists": ["FANSEED", "RATTENWOLF", "SUNDRA NOX"],
+        "external_artists": ["Жадан і Собаки", "Океан Ельзи", "The Hardkiss", "Boombox", "Antytila", "Sinoptik", 
+        "Atomic Simao", "Vivienne Mort", "Stoned Jesus", "1914", "Somali Yacht Club"]
+    },
+    "edm": {
+        "our_artists": ["BassBobro"],
+        "external_artists": ["Перкалаба", "Kalush", "Atomic Simao", "Cepasa", "Polygrim", "Chicane"]
+    },
+    "epic": {
+        "our_artists": ["500WOLDS"],
+        "external_artists": ["Hans Zimmer", "Inon Zur", "Epica", "Audiomachine", "Kalush", "Plume Soundtrack",
+        "Max Richter", "Two Steps From Hell", "Hildur"]
+    }
+}
