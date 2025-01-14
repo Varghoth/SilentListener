@@ -74,6 +74,10 @@
                     "params": {}
                 },
                 {
+                    "action": "click_search",
+                    "params": {}
+                },
+                {
                     "action": "select_artist",
                     "params": {
                         "probabilities": {

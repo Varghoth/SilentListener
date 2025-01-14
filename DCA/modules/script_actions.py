@@ -55,6 +55,7 @@ class ScriptActions:
             "fast_scroll_up_and_click": self.fast_scroll_up_and_click_action,
             ###################### Сбор Плейлистов ######################
             "check_first_launch": self.check_first_launch_action,
+            "click_search": self.click_search_action,
             "select_artist": self.select_artist_action,
             "open_albums_tab": self.open_albums_tab_action,
             "recognize_albums": self.recognize_albums_action,
@@ -942,7 +943,10 @@ class ScriptActions:
         Сохраняет дату последнего запуска в конфигурационном файле.
         """
         try:
-            config_file = os.path.join(self.project_dir, "launch_config.json")
+            # Определяем каталог для хранения конфигов
+            configs_dir = os.path.join(self.project_dir, "configs")
+            os.makedirs(configs_dir, exist_ok=True)  # Создаём каталог, если его нет
+            config_file = os.path.join(configs_dir, "launch_config.json")
 
             # Загружаем конфигурацию, если файл существует
             if os.path.exists(config_file):
@@ -968,6 +972,29 @@ class ScriptActions:
             logging.error(f"[CHECK_FIRST_LAUNCH] Ошибка: {e}")
             return False
     
+    
+    async def click_search_action(self, params):
+        """
+        Нажимает кнопку "search".
+        Проверяет наличие темплейта "search" и кликает по нему, если найден.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            logging.info("[CLICK_SEARCH_ACTION] Ищем кнопку 'search'.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("search", threshold):
+                logging.info("[CLICK_SEARCH_ACTION] Кнопка 'search' найдена. Выполняем клик.")
+                screen_service.interact_with_template("search", mouse_controller, threshold)
+            else:
+                logging.error("[CLICK_SEARCH_ACTION] Кнопка 'search' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[CLICK_SEARCH_ACTION] Ошибка: {e}")
+
+
     async def select_artist_action(self, params):
         """Заглушка."""
         logging.info("[-DONGLE-] Ничего не делаем. Заглушка!")

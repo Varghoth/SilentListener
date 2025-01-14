@@ -105,7 +105,7 @@ class ScreenService:
     
     def interact_with_template(self, template_name, mouse_controller, threshold=0.8):
         """
-        Ищет шаблон на экране, вычисляет его центр и кликает по нему.
+        Ищет шаблон на экране, вычисляет его центр и кликает по нему с вариативностью.
         """
         templates = self.load_templates(template_name)
         screen = self.capture_screen()
@@ -123,14 +123,30 @@ class ScreenService:
                 center_x = max_loc[0] + template.shape[1] // 2
                 center_y = max_loc[1] + template.shape[0] // 2
 
+                # Добавляем случайное смещение
+                radius_x = template.shape[1] * 0.15  # 10% от ширины шаблона
+                radius_y = template.shape[0] * 0.15  # 10% от высоты шаблона
+                offset_x = random.uniform(-radius_x, radius_x)
+                offset_y = random.uniform(-radius_y, radius_y)
+
+                # Итоговые координаты клика
+                target_x = int(center_x + offset_x)
+                target_y = int(center_y + offset_y)
+
+                self.logger.info(
+                    f"Шаблон найден. Центр: ({center_x}, {center_y}), "
+                    f"смещение: ({offset_x:.2f}, {offset_y:.2f}), "
+                    f"целевые координаты: ({target_x}, {target_y}), совпадение: {max_val}"
+                )
+
                 # Выполняем действия
-                self.logger.info(f"Шаблон найден. Центр: ({center_x}, {center_y}), совпадение: {max_val}")
-                mouse_controller.move_to(center_x, center_y)
+                mouse_controller.move_to(target_x, target_y)
                 mouse_controller.click()
                 return True
 
         self.logger.info(f"Шаблон '{template_name}' не найден.")
         return False
+
     
     def get_template_location(self, template_name, threshold=0.8):
         """
