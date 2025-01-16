@@ -45,3 +45,15 @@ docker exec -it dca_container bash
 
 #Копирование каталога в конт (пример)
 docker cp DCA dca_container:/app/DCA
+
+
+#DCA
+
+#Копирование DCA в конт
+docker cp DCA test_kont:/app/DCA
+
+#Вход в консоль конта
+docker exec -it test_kont bash
+
+#Запуск приложения
+python3 app/DCA/agent.py

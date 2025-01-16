@@ -164,6 +164,15 @@ class MouseController:
         pyautogui.click()
         logging.info(f"Клик мыши выполнен с задержкой {delay:.2f} сек.")
 
+    def right_click(self):
+        """
+        Симулирует правый клик мыши.
+        """
+        delay = self._random_value("delay")  # Случайная задержка перед кликом
+        time.sleep(delay)
+        pyautogui.click(button="right")
+        logging.info(f"Правый клик мыши выполнен с задержкой {delay:.2f} сек.")
+
     def scroll(self, direction="down", amount=None):
         """
         Эмулирует прокрутку колесика мыши.

@@ -14,7 +14,17 @@
                     "params": {}
                 },
                 {
+                    "action": "wait",
+                    "params": {
+                        "duration": 10
+                    }
+                },
+                {
                     "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "save_page",
                     "params": {}
                 },
                 {
@@ -45,17 +55,6 @@
                     "action": "wait",
                     "params": {
                         "duration": 2
-                    }
-                },
-                {
-                    "action": "random_action",
-                    "params": {
-                        "probabilities": {
-                            "set_cycle_oneclick": 70,
-                            "scroll_and_click": 10,
-                            "set_shuffle_on": 15,
-                            "fast_scroll_up_and_click": 5
-                        }
                     }
                 }
             ]
@@ -97,7 +96,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 3
+                        "duration": 4
                     }
                 },
                 {

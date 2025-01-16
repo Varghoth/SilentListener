@@ -61,7 +61,8 @@ class ScriptActions:
             "select_random_album": self.select_random_album_action,
             "collect_playlist_tracks": self.collect_playlist_tracks_action,
             "return_to_liked_music": self.return_to_liked_music_action,
-
+            "save_page": self.save_page_action,
+            "parse_liked_tracks": self.parse_liked_tracks_action,
         }
 
     async def log_message_action(self, params):
@@ -184,41 +185,40 @@ class ScriptActions:
 
     async def make_firefox_focus_action(self, params):
         """
-        Проверяет, находится ли Firefox в фокусе, и при необходимости выполняет действия для его активации.
+        Проверяет, запущен ли Firefox, и запускает его в развернутом виде через командную строку, если необходимо.
         :param params: Параметры действия (например, "threshold").
         """
         try:
             threshold = params.get("threshold", 0.9)
 
-            # Шаг 1: Проверка, находится ли Firefox в фокусе
-            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, находится ли Firefox в фокусе.")
-            screen_service = ScreenService()
-            if screen_service.is_template_on_screen("firefox_focus", threshold):
-                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox уже в фокусе. Действия не требуются.")
-                return
-
-            # Шаг 2: Проверка, запущен ли Firefox
+            # Проверка: запущен ли Firefox
             logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, запущен ли Firefox.")
-            if screen_service.is_template_on_screen("firefox", threshold):
-                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox запущен, но не в фокусе. Кликаем на него.")
-                mouse_controller = MouseController(self.project_dir)
-                screen_service.interact_with_template("firefox", mouse_controller, threshold)
-                return
-
-            # Шаг 3: Запуск браузера, если Firefox не найден
-            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запущен. Ищем и запускаем браузер.")
-            if screen_service.is_template_on_screen("browser", threshold):
-                mouse_controller = MouseController(self.project_dir)
-                screen_service.interact_with_template("browser", mouse_controller, threshold)
+            result = subprocess.run(
+                ["pgrep", "-f", "firefox"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            if result.returncode == 0:
+                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox уже запущен.")
+            else:
+                # Запуск Firefox с параметрами
+                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запущен. Запускаем браузер.")
+                subprocess.Popen(
+                    ["firefox", "--start-maximized"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=os.environ.copy()
+                )
                 await asyncio.sleep(5)  # Ждем загрузки Firefox
 
-                # Повторная проверка, запущен ли Firefox
-                if screen_service.is_template_on_screen("firefox_focus", threshold):
-                    logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox успешно запущен.")
-                else:
-                    logging.error("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запустился. Проверьте шаблоны.")
+            # Проверка: открыт ли Firefox в фокусе (если необходимо)
+            logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, в фокусе ли Firefox.")
+            screen_service = ScreenService()
+            if not screen_service.is_template_on_screen("firefox_focus", threshold):
+                logging.warning("[MAKE_FIREFOX_FOCUS_ACTION] Firefox запущен, но не в фокусе.")
+                mouse_controller = MouseController(self.project_dir)
+                screen_service.interact_with_template("firefox", mouse_controller, threshold)
             else:
-                logging.error("[MAKE_FIREFOX_FOCUS_ACTION] Браузер не найден. Проверьте шаблоны.")
+                logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox в фокусе.")
+
         except Exception as e:
             logging.error(f"[MAKE_FIREFOX_FOCUS_ACTION] Ошибка: {e}")
 
@@ -1100,7 +1100,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[OPEN_ALBUMS_TAB_ACTION] Ошибка: {e}")    
     
-
     async def select_random_album_action(self, params):
         """
         Выбирает случайный альбом на экране из доступных темплейтов и запускает его воспроизведение.
@@ -1192,7 +1191,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[COLLECT_PLAYLIST_TRACKS_ACTION] Ошибка: {e}")
 
-
     async def return_to_liked_music_action(self, params):
         """
         Возвращает проигрывание на плейлист 'Liked Music'.
@@ -1246,3 +1244,193 @@ class ScriptActions:
             logging.error(f"[RETURN_TO_LIKED_MUSIC_ACTION] Ошибка: {e}")
 
 ############################ [-END-] Сбор Плейлистов ############################
+
+############################ [START] Balancer ############################
+    async def save_page_action(self, params):
+        """
+        Сохраняет страницу через Ctrl+S с использованием темплейтов для взаимодействия с элементами.
+        """
+        try:
+            threshold = params.get("threshold", 0.9)  # Порог совпадения по умолчанию
+            logging.info("[SAVE_PAGE_ACTION] Начало выполнения.")
+
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            # Шаг 0: Удаление старого файла, если он существует
+            save_path = "/app/DCA/balancer.txt"
+            if os.path.exists(save_path):
+                os.remove(save_path)
+                logging.info(f"[SAVE_PAGE_ACTION] Удален существующий файл: {save_path}")
+
+            self.return_to_liked_music_action
+            await asyncio.sleep(3)  # Задержка для загрузки
+
+            # Шаг 1: Вызов окна сохранения (Ctrl+S)
+            pyautogui.hotkey("ctrl", "s")
+            logging.info("[SAVE_PAGE_ACTION] Окно сохранения вызвано.")
+            await asyncio.sleep(1)  # Задержка для отображения окна
+
+            # Шаг 2: Нажатие на анкорное поле для ввода имени файла (blncr_name_ancor)
+            if screen_service.is_template_on_screen("blncr_name_ancor", threshold):
+                logging.info("[SAVE_PAGE_ACTION] Темплейт 'blncr_name_ancor' найден. Нажимаем правой кнопкой.")
+                if not screen_service.interact_with_template_right_click("blncr_name_ancor", mouse_controller, threshold):
+                    logging.error("[SAVE_PAGE_ACTION] Не удалось нажать правой кнопкой на 'blncr_name_ancor'.")
+                    return
+            else:
+                logging.error("[SAVE_PAGE_ACTION] Темплейт 'blncr_name_ancor' не найден.")
+                return
+
+
+            # Шаг 3: Максимизация окна сохранения, если необходимо (blncr_maximise)
+            if screen_service.is_template_on_screen("blncr_maximise", threshold):
+                logging.info("[SAVE_PAGE_ACTION] Темплейт 'blncr_maximise' найден. Выполняем нажатие.")
+                screen_service.interact_with_template("blncr_maximise", mouse_controller, threshold)
+
+            # Шаг 4: Выбор формата файла через выпадающий список (blncr_arrow.down)
+            if screen_service.is_template_on_screen("blncr_arrow.down", threshold):
+                logging.info("[SAVE_PAGE_ACTION] Темплейт 'blncr_arrow.down' найден. Выполняем нажатие.")
+                if not screen_service.interact_with_template("blncr_arrow.down", mouse_controller, threshold):
+                    logging.error("[SAVE_PAGE_ACTION] Не удалось нажать на 'blncr_arrow.down'.")
+                    return
+
+                # Сдвиг мыши для выбора формата
+                pyautogui.move(0, 2)
+
+                # Нажатие на 'blncr_textfiles'
+                if not screen_service.interact_with_template("blncr_textfiles", mouse_controller, threshold):
+                    logging.error("[SAVE_PAGE_ACTION] Не удалось нажать на 'blncr_textfiles'.")
+                    return
+            else:
+                logging.error("[SAVE_PAGE_ACTION] Темплейт 'blncr_textfiles' не найден.")
+                return
+
+            # Шаг 5: Ввод пути сохранения файла (blncr_input)
+            if screen_service.is_template_on_screen("blncr_input", threshold):
+                logging.info("[SAVE_PAGE_ACTION] Темплейт 'blncr_input' найден. Выполняем ввод пути.")
+
+                pyautogui.hotkey("ctrl", "a")
+                logging.info("[SAVE_PAGE_ACTION] Выполняем выбрать всё.")
+                await asyncio.sleep(1)  # Задержка для отображения окна
+
+                pyautogui.typewrite("/app/DCA/balancer.txt")
+                logging.info("[SAVE_PAGE_ACTION] Введен путь сохранения: /app/DCA/balancer.txt")
+            else:
+                logging.error("[SAVE_PAGE_ACTION] Темплейт 'blncr_input' не найден.")
+                return
+
+            # Шаг 6: Подтверждение сохранения
+            pyautogui.press("enter")
+            logging.info("[SAVE_PAGE_ACTION] Подтверждение сохранения выполнено.")
+
+            # Шаг 7: Проверка наличия файла
+            await asyncio.sleep(2)  # Небольшая задержка для завершения сохранения
+            if os.path.exists(save_path):
+                logging.info(f"[SAVE_PAGE_ACTION] Файл успешно сохранен: {save_path}")
+            else:
+                logging.error("[SAVE_PAGE_ACTION] Файл не найден после сохранения.")
+
+        except Exception as e:
+            logging.error(f"[SAVE_PAGE_ACTION] Ошибка: {e}")
+
+
+
+    async def parse_liked_tracks_action(self, params):
+        """
+        Парсит плейлист Liked Tracks, распознаёт треки и анализирует баланс.
+        :param params: Параметры действия, включающие:
+                    - white_list: Белый список артистов.
+                    - max_scrolls: Максимальное количество прокруток.
+                    - threshold: Порог совпадения для OCR.
+        """
+        try:
+            # Извлекаем параметры
+            project_dir = self.project_dir
+            white_list = params.get("white_list", {})
+            max_scrolls = params.get("max_scrolls", 10)
+            threshold = params.get("threshold", 0.9)
+
+            screenshots_dir = os.path.join(project_dir, "screenshots")
+            os.makedirs(screenshots_dir, exist_ok=True)
+
+            logging.info("[PARSER] Начинаем парсинг плейлиста Liked Tracks.")
+
+            # Инициализация ScreenService
+            screen_service = ScreenService()
+
+            # Проверяем анкорный темплейт
+            if not screen_service.is_template_on_screen("ancor_scrolling", threshold):
+                logging.error("[PARSER] Анкорный темплейт 'ancor_scrolling' не найден. Прекращение выполнения.")
+                return
+
+            # Сбор скриншотов с прокруткой
+            screenshots = []
+            for scroll in range(max_scrolls):
+                if screen_service.is_template_on_screen("trigger_autoplay_off", threshold):
+                    logging.info("[PARSER] Конец списка найден (trigger_autoplay_off). Прекращение прокрутки.")
+                    break
+
+                # Сохраняем скриншот
+                screenshot_path = os.path.join(screenshots_dir, f"liked_tracks_{scroll}.png")
+                screenshot = pyautogui.screenshot()
+                screenshot.save(screenshot_path)
+                screenshots.append(screenshot_path)
+                logging.info(f"[PARSER] Скриншот сохранён: {screenshot_path}")
+
+                # Прокрутка
+                await self.scrolling_action({"direction": "down", "steps": 5, "threshold": threshold})
+                await asyncio.sleep(1.0)
+
+            # Обработка скриншотов
+            tracks = []
+            artist_counts = {}
+            for screenshot in screenshots:
+                logging.info(f"[PARSER] Обработка скриншота: {screenshot}")
+                image = cv2.imread(screenshot)
+
+                # Предварительная обработка изображения
+                height, width, _ = image.shape
+                cropped = image[:, width // 2:]
+                gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+                _, binary = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+                # Распознавание текста
+                text = pytesseract.image_to_string(binary, lang="eng")
+                logging.debug(f"[PARSER] Распознанный текст: {text}")
+                lines = [line.strip() for line in text.split("\n") if line.strip()]
+
+                for line in lines:
+                    # Фильтрация строк формата "Исполнитель - Трек"
+                    if " - " in line:
+                        parts = line.split(" - ")
+                        if len(parts) == 2:
+                            artist, title = parts
+                            tracks.append((artist.strip(), title.strip()))
+
+                            # Подсчёт упоминаний артистов
+                            artist_name = artist.strip()
+                            artist_counts[artist_name] = artist_counts.get(artist_name, 0) + 1
+
+            # Уникальные треки
+            unique_tracks = [{"artist": artist, "title": title} for artist, title in set(tracks)]
+            logging.info(f"[PARSER] Уникальных треков найдено: {len(unique_tracks)}")
+
+            # Подсчёт статистики
+            our_artist_count = sum(artist_counts.get(artist, 0) for artist in white_list.get("our_artists", []))
+            total_tracks = sum(artist_counts.values())
+
+            if total_tracks > 0:
+                ratio = 100 * our_artist_count / total_tracks
+            else:
+                ratio = 0.0
+
+            logging.info(f"[PARSER] Всего треков: {total_tracks}, Наши: {our_artist_count}")
+            logging.info(f"[PARSER] Соотношение: {ratio:.2f}%")
+
+            return {"total_tracks": total_tracks, "our_tracks": our_artist_count, "ratio": ratio}
+
+        except Exception as e:
+            logging.error(f"[PARSER] Ошибка парсинга: {e}")
+            return None
+
+############################ [-END-] Balancer ############################

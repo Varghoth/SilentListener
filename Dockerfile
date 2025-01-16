@@ -45,6 +45,7 @@ RUN apt-get update && \
         pillow \
         qasync \
         pytesseract \
+        playwright \
         opencv-python-headless
 
     # Установка PyQt5 через apt и pip
