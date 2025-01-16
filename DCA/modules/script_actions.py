@@ -8,9 +8,11 @@ import cv2
 import numpy as np
 import threading
 import os
+import re
 import random
 import pytesseract
 from PIL import Image
+from datetime import datetime
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
@@ -1263,7 +1265,26 @@ class ScriptActions:
                 os.remove(save_path)
                 logging.info(f"[SAVE_PAGE_ACTION] Удален существующий файл: {save_path}")
 
-            self.return_to_liked_music_action
+            # Проверяем наличие темплейта liked_music и нажимаем на него
+            if screen_service.is_template_on_screen("liked_music", threshold):
+                logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music' найден.")
+                template_location = screen_service.get_template_location("liked_music", threshold)
+
+                if template_location:
+                    x, y, width, height = template_location
+                    target_x = x + width // 2
+                    target_y = y + height // 2
+
+                    # Нажатие на темплейт 'liked_music'
+                    mouse_controller.move_to(target_x, target_y)
+                    mouse_controller.click()
+                    logging.info("[RETURN_TO_LIKED_MUSIC_ACTION] Нажатие на темплейт 'liked_music'.")
+                else:
+                    logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Не удалось определить координаты темплейта 'liked_music'.")
+                    return
+            else:
+                logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music' не найден.")
+                return
             await asyncio.sleep(3)  # Задержка для загрузки
 
             # Шаг 1: Вызов окна сохранения (Ctrl+S)
@@ -1334,103 +1355,74 @@ class ScriptActions:
             logging.error(f"[SAVE_PAGE_ACTION] Ошибка: {e}")
 
 
-
     async def parse_liked_tracks_action(self, params):
         """
-        Парсит плейлист Liked Tracks, распознаёт треки и анализирует баланс.
-        :param params: Параметры действия, включающие:
-                    - white_list: Белый список артистов.
-                    - max_scrolls: Максимальное количество прокруток.
-                    - threshold: Порог совпадения для OCR.
+        Анализирует треки в файле balancer.txt, вычисляет соотношение наших и чужих треков и выводит результаты в консоль.
+        :param params: Параметры действия, включающие путь к белому списку и путь к файлу balancer.txt.
         """
         try:
-            # Извлекаем параметры
-            project_dir = self.project_dir
-            white_list = params.get("white_list", {})
-            max_scrolls = params.get("max_scrolls", 10)
-            threshold = params.get("threshold", 0.9)
+            # Параметры
+            white_list_path = params.get("white_list_path", "/app/DCA/configs/white_list.json")
+            balancer_file_path = params.get("balancer_file_path", "/app/DCA/balancer.txt")
+            output_config_path = "/app/DCA/configs/analysis_results.json"
 
-            screenshots_dir = os.path.join(project_dir, "screenshots")
-            os.makedirs(screenshots_dir, exist_ok=True)
-
-            logging.info("[PARSER] Начинаем парсинг плейлиста Liked Tracks.")
-
-            # Инициализация ScreenService
-            screen_service = ScreenService()
-
-            # Проверяем анкорный темплейт
-            if not screen_service.is_template_on_screen("ancor_scrolling", threshold):
-                logging.error("[PARSER] Анкорный темплейт 'ancor_scrolling' не найден. Прекращение выполнения.")
+            # Проверка существования файла balancer.txt
+            if not os.path.exists(balancer_file_path):
+                logging.error(f"[PARSE_LIKED_TRACKS_ACTION] Файл {balancer_file_path} не найден.")
                 return
 
-            # Сбор скриншотов с прокруткой
-            screenshots = []
-            for scroll in range(max_scrolls):
-                if screen_service.is_template_on_screen("trigger_autoplay_off", threshold):
-                    logging.info("[PARSER] Конец списка найден (trigger_autoplay_off). Прекращение прокрутки.")
-                    break
+            # Загрузка белого списка
+            if not os.path.exists(white_list_path):
+                logging.error(f"[PARSE_LIKED_TRACKS_ACTION] Файл белого списка {white_list_path} не найден.")
+                return
 
-                # Сохраняем скриншот
-                screenshot_path = os.path.join(screenshots_dir, f"liked_tracks_{scroll}.png")
-                screenshot = pyautogui.screenshot()
-                screenshot.save(screenshot_path)
-                screenshots.append(screenshot_path)
-                logging.info(f"[PARSER] Скриншот сохранён: {screenshot_path}")
+            with open(white_list_path, "r", encoding="utf-8") as file:
+                white_list = json.load(file)
 
-                # Прокрутка
-                await self.scrolling_action({"direction": "down", "steps": 5, "threshold": threshold})
-                await asyncio.sleep(1.0)
+            our_artists = set(white_list.get("electronic", {}).get("our_artists", []))
 
-            # Обработка скриншотов
-            tracks = []
-            artist_counts = {}
-            for screenshot in screenshots:
-                logging.info(f"[PARSER] Обработка скриншота: {screenshot}")
-                image = cv2.imread(screenshot)
+            # Чтение файла balancer.txt
+            with open(balancer_file_path, "r", encoding="utf-8") as file:
+                lines = file.readlines()
 
-                # Предварительная обработка изображения
-                height, width, _ = image.shape
-                cropped = image[:, width // 2:]
-                gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-                _, binary = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-                # Распознавание текста
-                text = pytesseract.image_to_string(binary, lang="eng")
-                logging.debug(f"[PARSER] Распознанный текст: {text}")
-                lines = [line.strip() for line in text.split("\n") if line.strip()]
-
-                for line in lines:
-                    # Фильтрация строк формата "Исполнитель - Трек"
-                    if " - " in line:
-                        parts = line.split(" - ")
-                        if len(parts) == 2:
-                            artist, title = parts
-                            tracks.append((artist.strip(), title.strip()))
-
-                            # Подсчёт упоминаний артистов
-                            artist_name = artist.strip()
-                            artist_counts[artist_name] = artist_counts.get(artist_name, 0) + 1
-
-            # Уникальные треки
-            unique_tracks = [{"artist": artist, "title": title} for artist, title in set(tracks)]
-            logging.info(f"[PARSER] Уникальных треков найдено: {len(unique_tracks)}")
-
-            # Подсчёт статистики
-            our_artist_count = sum(artist_counts.get(artist, 0) for artist in white_list.get("our_artists", []))
-            total_tracks = sum(artist_counts.values())
-
-            if total_tracks > 0:
-                ratio = 100 * our_artist_count / total_tracks
+            # Извлечение общего количества треков в плейлисте
+            total_tracks_match = next((line for line in lines if "songs•" in line), None)
+            if total_tracks_match:
+                total_tracks = int(re.search(r"\d+(?=\s+songs•)", total_tracks_match).group())
             else:
-                ratio = 0.0
+                total_tracks = 0
 
-            logging.info(f"[PARSER] Всего треков: {total_tracks}, Наши: {our_artist_count}")
-            logging.info(f"[PARSER] Соотношение: {ratio:.2f}%")
+            # Подсчёт упоминаний наших артистов
+            our_tracks = 0
+            for line in lines:
+                for artist in our_artists:
+                    if artist in line:
+                        our_tracks += 1
 
-            return {"total_tracks": total_tracks, "our_tracks": our_artist_count, "ratio": ratio}
+            # Расчёт соотношения
+            ratio = (our_tracks / total_tracks * 100) if total_tracks > 0 else 0.0
+
+            # Сохранение результатов в конфигурационный файл
+            results = {
+                "total_tracks": total_tracks,
+                "our_tracks": our_tracks,
+                "ratio": round(ratio, 2),
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+
+            os.makedirs(os.path.dirname(output_config_path), exist_ok=True)
+            with open(output_config_path, "w", encoding="utf-8") as outfile:
+                json.dump(results, outfile, ensure_ascii=False, indent=4)
+
+            # Вывод результатов
+            logging.info(f"[PARSE_LIKED_TRACKS_ACTION] Анализ завершён и сохранён в {output_config_path}.")
+            print(f"Общее количество треков: {total_tracks}")
+            print(f"Наши треки: {our_tracks}")
+            print(f"Процент наших треков: {ratio:.2f}%")
+            print(f"Результаты сохранены в файл: {output_config_path}")
 
         except Exception as e:
-            logging.error(f"[PARSER] Ошибка парсинга: {e}")
-            return None
+            logging.error(f"[PARSE_LIKED_TRACKS_ACTION] Ошибка: {e}")
+            print(f"Ошибка анализа треков: {e}")
 
 ############################ [-END-] Balancer ############################

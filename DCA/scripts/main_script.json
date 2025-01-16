@@ -16,7 +16,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 10
+                        "duration": 15
                     }
                 },
                 {
@@ -25,6 +25,26 @@
                 },
                 {
                     "action": "save_page",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "parse_liked_tracks",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "analyze_track_balance",
                     "params": {}
                 },
                 {
