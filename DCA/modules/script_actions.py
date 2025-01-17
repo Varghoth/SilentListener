@@ -1001,12 +1001,15 @@ class ScriptActions:
         """
         Выбирает жанр из конфига (или создаёт новый), определяет случайного артиста 
         из белого списка и вводит его имя в строку поиска.
-        :param params: Параметры действия.
+        :param params: Параметры действия. Ожидаемые параметры:
+            - "our_artist_weight" (вес для наших артистов)
+            - "external_artist_weight" (вес для внешних артистов)
         """
         try:
             # Определяем каталог для хранения конфигов и белых списков
             configs_dir = os.path.join(self.project_dir, "configs")
             white_list_file = os.path.join(configs_dir, "white_list.json")
+            ideal_balance_file = os.path.join(configs_dir, "ideal_balance.json")
             config_file = os.path.join(configs_dir, "playlist_config.json")
 
             os.makedirs(configs_dir, exist_ok=True)  # Создаём каталог, если его нет
@@ -1041,10 +1044,28 @@ class ScriptActions:
                 logging.error(f"[SELECT_ARTIST_ACTION] Жанр {selected_genre} отсутствует в white_list.json.")
                 return
 
+            # Получаем вероятности из параметров, если они заданы
+            our_artist_weight = params.get("our_artist_weight")
+            external_artist_weight = params.get("external_artist_weight")
+
+            # Если вероятности не переданы в параметрах, загружаем из ideal_balance.json
+            if our_artist_weight is None or external_artist_weight is None:
+                if not os.path.exists(ideal_balance_file):
+                    logging.error("[SELECT_ARTIST_ACTION] Файл ideal_balance.json не найден.")
+                    return
+
+                with open(ideal_balance_file, "r", encoding="utf-8") as file:
+                    ideal_balance = json.load(file).get("ideal_balance", {})
+
+                our_artist_weight = ideal_balance.get("our_artists", 34)
+                external_artist_weight = ideal_balance.get("external_artists", 66)
+
+            logging.info(f"[SELECT_ARTIST_ACTION] Вероятности: our_artists={our_artist_weight}, external_artists={external_artist_weight}")
+
             # Определяем артиста с заданными вероятностями
             artist_source = random.choices(
                 ["our_artists", "external_artists"],
-                weights=[34, 66],
+                weights=[our_artist_weight, external_artist_weight],
                 k=1
             )[0]
 
@@ -1075,6 +1096,7 @@ class ScriptActions:
 
         except Exception as e:
             logging.error(f"[SELECT_ARTIST_ACTION] Ошибка: {e}")
+
 
     async def open_albums_tab_action(self, params):
         """
@@ -1276,7 +1298,12 @@ class ScriptActions:
             await self.click_search_action(params)
 
             # 4. Выбираем случайного артиста и вводим его в строку поиска
-            await self.select_artist_action(params)
+            #await self.select_artist_action({})
+            await self.select_artist_action({
+                "our_artist_weight": 100,
+                "external_artist_weight": 0
+            })
+
 
             # 5. Ждем загрузки результатов поиска
             await asyncio.sleep(params.get("wait_after_search", 4))
