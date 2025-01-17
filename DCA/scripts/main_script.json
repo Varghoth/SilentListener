@@ -44,16 +44,6 @@
                     }
                 },
                 {
-                    "action": "analyze_track_balance",
-                    "params": {}
-                },
-                {
-                    "action": "wait",
-                    "params": {
-                        "duration": 2
-                    }
-                },
-                {
                     "action": "skip_ad",
                     "params": {}
                 },

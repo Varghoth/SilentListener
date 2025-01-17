@@ -65,7 +65,6 @@ class ScriptActions:
             "return_to_liked_music": self.return_to_liked_music_action,
             "save_page": self.save_page_action,
             "parse_liked_tracks": self.parse_liked_tracks_action,
-            "analyze_track_balance": self.analyze_track_balance_action,
             "playlist_collection_workflow": self.playlist_collection_workflow,
         }
 
@@ -567,13 +566,28 @@ class ScriptActions:
                 # Повторно проверяем наличие темплейта like_on
                 if screen_service.is_template_on_screen("like_on", threshold):
                     logging.info("[SET_STREAMING_LIKE_ACTION] Лайк успешно установлен.")
+
+                    # Проверяем и обновляем количество необходимых треков
+                    analysis_results_path = "/app/DCA_configs/analysis_results.json"
+                    if os.path.exists(analysis_results_path):
+                        with open(analysis_results_path, "r+", encoding="utf-8") as file:
+                            analysis_results = json.load(file)
+                            tracks_to_add = analysis_results.get("tracks_to_add", {})
+                            if tracks_to_add.get("count", 0) > 0:
+                                tracks_to_add["count"] -= 1
+                                logging.info(f"[SET_STREAMING_LIKE_ACTION] Уменьшено количество треков для добавления: {tracks_to_add['count']}")
+                                file.seek(0)
+                                json.dump(analysis_results, file, ensure_ascii=False, indent=4)
+                                file.truncate()
+                            else:
+                                logging.info("[SET_STREAMING_LIKE_ACTION] Количество треков для добавления уже равно 0 или отсутствует.")
                 else:
                     logging.error("[SET_STREAMING_LIKE_ACTION] Лайк не установился. Проверьте шаблоны или приложение.")
             else:
                 logging.error("[SET_STREAMING_LIKE_ACTION] Кнопка 'like_off' не найдена. Проверьте шаблоны.")
         except Exception as e:
             logging.error(f"[SET_STREAMING_LIKE_ACTION] Ошибка: {e}")
-
+    
     async def skip_ad_action(self, params):
         """
         Выполняет действия для исправления ошибок (например, пропуска рекламы).
@@ -1097,7 +1111,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SELECT_ARTIST_ACTION] Ошибка: {e}")
 
-
     async def open_albums_tab_action(self, params):
         """
         Ищет темплейт album на экране и кликает по нему.
@@ -1311,9 +1324,6 @@ class ScriptActions:
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
 
-            # 9. Возвращаемся к плейлисту Liked Music
-            await self.return_to_liked_music_action(params)
-
             logging.info("[DEF_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
 
         except Exception as e:
@@ -1356,9 +1366,6 @@ class ScriptActions:
 
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
-
-            # 9. Возвращаемся к плейлисту Liked Music
-            await self.return_to_liked_music_action(params)
 
             logging.info("[OUR_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
 
@@ -1403,9 +1410,6 @@ class ScriptActions:
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
 
-            # 9. Возвращаемся к плейлисту Liked Music
-            await self.return_to_liked_music_action(params)
-
             logging.info("[EXTERNAL_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
 
         except Exception as e:
@@ -1424,7 +1428,7 @@ class ScriptActions:
             if is_first_launch:
                 logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Это первый запуск за сегодня.")
 
-            # Проверяем наличие файла анализа
+            # 2. Проверяем наличие файла анализа
             analysis_results_path = "/app/DCA_configs/analysis_results.json"
             if not os.path.exists(analysis_results_path):
                 logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Файл анализа не найден.")
@@ -1435,7 +1439,7 @@ class ScriptActions:
                     return
 
             else:
-                # Загружаем данные из файла анализа
+                # 3. Загружаем данные из файла анализа
                 with open(analysis_results_path, "r", encoding="utf-8") as file:
                     analysis_results = json.load(file)
 
@@ -1443,13 +1447,13 @@ class ScriptActions:
                 balance_status = analysis_results.get("balance_status", "")
                 logging.info(f"[PLAYLIST_COLLECTION_WORKFLOW] total_tracks={total_tracks}, balance_status={balance_status}")
 
-                # Проверяем общее количество треков
+                # 4. Проверяем общее количество треков
                 if total_tracks < 50:
                     logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Общее количество треков < 50. Запускаем сбор по умолчанию.")
                     await self.run_def_collection_action(params)
                     return
 
-                # Проверяем балансировку
+                # 5. Проверяем балансировку
                 if balance_status == "Балансировка не требуется":
                     if random.random() < 0.3:  # Вероятность 30%
                         await self.run_def_collection_action(params)
@@ -1459,12 +1463,20 @@ class ScriptActions:
 
                 elif balance_status == "Требуется балансировка":
                     tracks_to_add = analysis_results.get("tracks_to_add", {})
-                    if tracks_to_add.get("type") == "external_artists":
-                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону наших исполнителей.")
-                        await self.run_external_artists_collection_action(params)
-                    elif tracks_to_add.get("type") == "our_artists":
-                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону внешних исполнителей.")
-                        await self.run_our_artists_collection_action(params)
+                    tracks_count = tracks_to_add.get("count", 0)
+
+                    if tracks_count > 0:  # Проверяем, что количество треков больше 0
+                        if tracks_to_add.get("type") == "external_artists":
+                            logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону наших исполнителей. Добавляем внешние треки.")
+                            await self.run_external_artists_collection_action(params)
+                        elif tracks_to_add.get("type") == "our_artists":
+                            logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону внешних исполнителей. Добавляем наши треки.")
+                            await self.run_our_artists_collection_action(params)
+                    else:
+                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Количество треков для добавления = 0. Действие не требуется.")
+
+            # 6. Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
 
         except Exception as e:
             logging.error(f"[PLAYLIST_COLLECTION_WORKFLOW] Ошибка выполнения рабочего процесса: {e}")
@@ -1666,13 +1678,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[PARSE_LIKED_TRACKS_ACTION] Ошибка: {e}")
             print(f"Ошибка анализа треков: {e}")
-
-    async def analyze_track_balance_action(self, params):
-        """
-        Анализирует баланс треков на основе данных из analysis_results.json
-        и ideal_balance.json, дополняет файл analysis_results.json результатами.
-        :param params: Параметры действия (не используются).
-        """
 
         try:
             # Параметры
