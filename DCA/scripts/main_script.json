@@ -83,73 +83,8 @@
             "name": "Сбор плейлистов",
             "steps": [
                 {
-                    "action": "log_message",
-                    "params": {
-                        "message": "Начинаем сбор плейлистов"
-                    }
-                },
-                {
-                    "action": "check_first_launch",
-                    "params": {}
-                },
-                {
-                    "action": "skip_ad",
-                    "params": {}
-                },
-                {
-                    "action": "skip_ad",
-                    "params": {}
-                },
-                {
-                    "action": "click_search",
-                    "params": {}
-                },
-                {
-                    "action": "select_artist",
-                    "params": {
-                        "probabilities": {
-                            "our_artist": 34,
-                            "other_artist": 66
-                        }
-                    }
-                },
-                {
-                    "action": "wait",
-                    "params": {
-                        "duration": 4
-                    }
-                },
-                {
-                    "action": "open_albums_tab",
-                    "params": {}
-                },
-                {
-                    "action": "wait",
-                    "params": {
-                        "duration": 2
-                    }
-                },
-                {
-                    "action": "select_random_album",
-                    "params": {}
-                },
-                {
-                    "action": "collect_playlist_tracks",
-                    "params": {
-                        "like_probability": 15
-                    }
-                },
-                {
-                    "action": "return_to_liked_music",
-                    "params": {
-                        "message": "Возвращаемся к плейлисту Liked Music"
-                    }
-                },
-                {
-                    "action": "log_message",
-                    "params": {
-                        "message": "Сбор плейлистов завершён"
-                    }
+                    "action": "playlist_collection_workflow", 
+                    "params": {"wait_after_search": 4, "wait_after_albums": 2, "like_probability": 15}
                 }
             ]
         },

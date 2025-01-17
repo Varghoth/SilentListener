@@ -2,6 +2,5 @@
     "ideal_balance": {
         "our_artists": 34,
         "external_artists": 66
-    },
-    "description": "Ideal balance percentages for our and external artists. The sum should always equal 100."
+    }
 }

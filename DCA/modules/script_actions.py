@@ -12,7 +12,7 @@ import re
 import random
 import pytesseract
 from PIL import Image
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
@@ -65,6 +65,8 @@ class ScriptActions:
             "return_to_liked_music": self.return_to_liked_music_action,
             "save_page": self.save_page_action,
             "parse_liked_tracks": self.parse_liked_tracks_action,
+            "analyze_track_balance": self.analyze_track_balance_action,
+            "playlist_collection_workflow": self.playlist_collection_workflow,
         }
 
     async def log_message_action(self, params):
@@ -946,9 +948,9 @@ class ScriptActions:
         """
         try:
             # Определяем каталог для хранения конфигов
-            configs_dir = os.path.join(self.project_dir, "configs")
+            configs_dir = "/app/DCA_configs"
             os.makedirs(configs_dir, exist_ok=True)  # Создаём каталог, если его нет
-            config_file = os.path.join(configs_dir, "launch_config.json")
+            config_file = os.path.join(configs_dir, "PlaylistCollect_first_launch.json")
 
             # Загружаем конфигурацию, если файл существует
             if os.path.exists(config_file):
@@ -1109,55 +1111,59 @@ class ScriptActions:
         """
         try:
             threshold = params.get("threshold", 0.9)
+            max_attempts = 3  # Максимальное количество попыток поиска темплейта
 
-            logging.info("[SELECT_RANDOM_ALBUM_ACTION] Поиск темплейта albums для позиционирования.")
+            logging.info("[SELECT_RANDOM_ALBUM_ACTION] Начало выполнения.")
             screen_service = ScreenService()
             mouse_controller = MouseController(self.project_dir)
 
-            # Определяем координаты якорного темплейта "albums"
-            if screen_service.is_template_on_screen("albums", threshold):
-                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' найден.")
-                template_location = screen_service.get_template_location("albums", threshold)
+            # Попытки найти темплейт 'albums'
+            template_location = None
+            for attempt in range(1, max_attempts + 1):
+                logging.info(f"[SELECT_RANDOM_ALBUM_ACTION] Попытка {attempt} поиска темплейта 'albums'.")
+                if screen_service.is_template_on_screen("albums", threshold):
+                    template_location = screen_service.get_template_location("albums", threshold)
+                    if template_location:
+                        logging.info(f"[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' найден на попытке {attempt}.")
+                        break
+                await asyncio.sleep(0.5)  # Задержка перед следующей попыткой
 
-                if template_location:
-                    template_x, template_y, template_width, template_height = template_location
+            if not template_location:
+                logging.error(f"[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' не найден после {max_attempts} попыток.")
+                return
 
-                    # Сдвигаем мышь вниз относительно высоты темплейта "albums"
-                    random_y_offset = random.uniform(4 * template_height, 6 * template_height)
-                    target_x = template_x + template_width // 2
-                    target_y = template_y + random_y_offset
+            template_x, template_y, template_width, template_height = template_location
 
-                    mouse_controller.move_to(int(target_x), int(target_y))
-                    logging.info(f"[SELECT_RANDOM_ALBUM_ACTION] Мышь позиционирована в точку ({target_x}, {target_y}).")
+            # Сдвигаем мышь вниз относительно высоты темплейта "albums"
+            random_y_offset = random.uniform(4 * template_height, 6 * template_height)
+            target_x = template_x + template_width // 2
+            target_y = template_y + random_y_offset
 
-                    # Выполняем случайный скроллинг или пропускаем его
-                    if random.choice([True, False]):
-                        await asyncio.sleep(0.5)
-                        direction = random.choice(["up", "down"])
-                        steps = random.randint(1, 3)
-                        for _ in range(steps):
-                            pyautogui.scroll(-1 if direction == "down" else 1)
-                            await asyncio.sleep(random.uniform(0.2, 0.5))
-                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг выполнен.")
-                    else:
-                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг пропущен.")
+            mouse_controller.move_to(int(target_x), int(target_y))
+            logging.info(f"[SELECT_RANDOM_ALBUM_ACTION] Мышь позиционирована в точку ({target_x}, {target_y}).")
 
-                    # Используем target_template для наведения на случайный альбом
-                    logging.info("[SELECT_RANDOM_ALBUM_ACTION] Поиск и наведение на случайный альбом.")
-                    if screen_service.target_template("choose_album", mouse_controller, threshold):
-                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Наведение на случайный альбом выполнено успешно.")
-
-                        # Выполняем click_play_small_action для запуска воспроизведения
-                        await self.click_play_small_action({})
-                        logging.info("[SELECT_RANDOM_ALBUM_ACTION] Воспроизведение альбома запущено.")
-                    else:
-                        logging.error("[SELECT_RANDOM_ALBUM_ACTION] Темплейты 'choose_album' не найдены.")
-                        return
-                else:
-                    logging.error("[SELECT_RANDOM_ALBUM_ACTION] Не удалось определить координаты темплейта 'albums'.")
-                    return
+            # Выполняем случайный скроллинг или пропускаем его
+            if random.choice([True, False]):
+                await asyncio.sleep(0.5)
+                direction = random.choice(["up", "down"])
+                steps = random.randint(1, 3)
+                for _ in range(steps):
+                    pyautogui.scroll(-1 if direction == "down" else 1)
+                    await asyncio.sleep(random.uniform(0.2, 0.5))
+                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг выполнен.")
             else:
-                logging.error("[SELECT_RANDOM_ALBUM_ACTION] Темплейт 'albums' не найден. Проверьте шаблоны.")
+                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Случайный скроллинг пропущен.")
+
+            # Используем target_template для наведения на случайный альбом
+            logging.info("[SELECT_RANDOM_ALBUM_ACTION] Поиск и наведение на случайный альбом.")
+            if screen_service.target_template("choose_album", mouse_controller, threshold):
+                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Наведение на случайный альбом выполнено успешно.")
+
+                # Выполняем click_play_small_action для запуска воспроизведения
+                await self.click_play_small_action({})
+                logging.info("[SELECT_RANDOM_ALBUM_ACTION] Воспроизведение альбома запущено.")
+            else:
+                logging.error("[SELECT_RANDOM_ALBUM_ACTION] Темплейты 'choose_album' не найдены.")
                 return
 
         except Exception as e:
@@ -1177,6 +1183,8 @@ class ScriptActions:
 
             # Вероятность вызова set_streaming_like
             like_probability = params.get("like_probability", 15)  # По умолчанию 15%
+
+            await self.set_streaming_play_action({}) # На всякий случай запускаем воспроизведение (а то бывали случаи)
 
             while time.time() < end_time:
                 # Случайный интервал между итерациями (30–60 секунд)
@@ -1245,6 +1253,54 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[RETURN_TO_LIKED_MUSIC_ACTION] Ошибка: {e}")
 
+    async def playlist_collection_workflow(self, params):
+        """
+        Интеллектуальная функция для управления процессом сбора плейлистов.
+        Выполняет все действия последовательно, с возможностью добавления логики.
+        """
+        try:
+            logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Начало выполнения рабочего процесса сбора плейлистов.")
+
+            # 1. Проверяем первый запуск за день
+            is_first_launch = await self.check_first_launch_action(params)
+            if is_first_launch:
+                logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Это первый запуск за сегодня.")
+
+            await asyncio.sleep(5)  # Задержка для загрузки
+
+            # 2. Пропускаем рекламу (дважды, на случай задержки)
+            await self.skip_ad_action(params)
+            await self.skip_ad_action(params)
+
+            # 3. Нажимаем на кнопку поиска
+            await self.click_search_action(params)
+
+            # 4. Выбираем случайного артиста и вводим его в строку поиска
+            await self.select_artist_action(params)
+
+            # 5. Ждем загрузки результатов поиска
+            await asyncio.sleep(params.get("wait_after_search", 4))
+
+            # 6. Открываем вкладку альбомов
+            await self.open_albums_tab_action(params)
+
+            # 7. Ждем загрузки вкладки альбомов
+            await asyncio.sleep(params.get("wait_after_albums", 2))
+
+            # 8. Выбираем случайный альбом и запускаем его воспроизведение
+            await self.select_random_album_action(params)
+
+            # 9. Собираем треки из плейлиста
+            await self.collect_playlist_tracks_action(params)
+
+            # 10. Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
+
+            logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Рабочий процесс сбора плейлистов завершен успешно.")
+
+        except Exception as e:
+            logging.error(f"[PLAYLIST_COLLECTION_WORKFLOW] Ошибка выполнения рабочего процесса: {e}")
+
 ############################ [-END-] Сбор Плейлистов ############################
 
 ############################ [START] Balancer ############################
@@ -1252,6 +1308,14 @@ class ScriptActions:
         """
         Сохраняет страницу через Ctrl+S с использованием темплейтов для взаимодействия с элементами.
         """
+        if await self.check_analysis_file_age(params):
+            # Файл отсутствует или устарел
+            logging.info("[CALLER_FUNCTION] Продолжаем выполнение.")
+        else:
+            # Файл актуален, прерываем выполнение
+            logging.info("[CALLER_FUNCTION] Выполнение прервано из-за актуальности анализа.")
+            return
+
         try:
             threshold = params.get("threshold", 0.9)  # Порог совпадения по умолчанию
             logging.info("[SAVE_PAGE_ACTION] Начало выполнения.")
@@ -1260,7 +1324,7 @@ class ScriptActions:
             mouse_controller = MouseController(self.project_dir)
 
             # Шаг 0: Удаление старого файла, если он существует
-            save_path = "/app/DCA/balancer.txt"
+            save_path = "/app/DCA_config/balancer.txt"
             if os.path.exists(save_path):
                 os.remove(save_path)
                 logging.info(f"[SAVE_PAGE_ACTION] Удален существующий файл: {save_path}")
@@ -1285,12 +1349,15 @@ class ScriptActions:
             else:
                 logging.error("[RETURN_TO_LIKED_MUSIC_ACTION] Темплейт 'liked_music' не найден.")
                 return
-            await asyncio.sleep(3)  # Задержка для загрузки
+            
+            
+            await asyncio.sleep(4)  # Задержка для загрузки
+
 
             # Шаг 1: Вызов окна сохранения (Ctrl+S)
             pyautogui.hotkey("ctrl", "s")
             logging.info("[SAVE_PAGE_ACTION] Окно сохранения вызвано.")
-            await asyncio.sleep(1)  # Задержка для отображения окна
+            await asyncio.sleep(3)  # Задержка для отображения окна
 
             # Шаг 2: Нажатие на анкорное поле для ввода имени файла (blncr_name_ancor)
             if screen_service.is_template_on_screen("blncr_name_ancor", threshold):
@@ -1345,7 +1412,7 @@ class ScriptActions:
             logging.info("[SAVE_PAGE_ACTION] Подтверждение сохранения выполнено.")
 
             # Шаг 7: Проверка наличия файла
-            await asyncio.sleep(2)  # Небольшая задержка для завершения сохранения
+            await asyncio.sleep(3)  # Небольшая задержка для завершения сохранения
             if os.path.exists(save_path):
                 logging.info(f"[SAVE_PAGE_ACTION] Файл успешно сохранен: {save_path}")
             else:
@@ -1354,17 +1421,24 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SAVE_PAGE_ACTION] Ошибка: {e}")
 
-
     async def parse_liked_tracks_action(self, params):
         """
         Анализирует треки в файле balancer.txt, вычисляет соотношение наших и чужих треков и выводит результаты в консоль.
         :param params: Параметры действия, включающие путь к белому списку и путь к файлу balancer.txt.
         """
+        if await self.check_analysis_file_age(params):
+            # Файл отсутствует или устарел
+            logging.info("[CALLER_FUNCTION] Продолжаем выполнение.")
+        else:
+            # Файл актуален, прерываем выполнение
+            logging.info("[CALLER_FUNCTION] Выполнение прервано из-за актуальности анализа.")
+            return
+
         try:
             # Параметры
             white_list_path = params.get("white_list_path", "/app/DCA/configs/white_list.json")
             balancer_file_path = params.get("balancer_file_path", "/app/DCA/balancer.txt")
-            output_config_path = "/app/DCA/configs/analysis_results.json"
+            output_config_path = "/app/DCA_configs/analysis_results.json"
 
             # Проверка существования файла balancer.txt
             if not os.path.exists(balancer_file_path):
@@ -1424,5 +1498,141 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[PARSE_LIKED_TRACKS_ACTION] Ошибка: {e}")
             print(f"Ошибка анализа треков: {e}")
+
+    async def analyze_track_balance_action(self, params):
+        """
+        Анализирует баланс треков на основе данных из analysis_results.json
+        и ideal_balance.json, дополняет файл analysis_results.json результатами.
+        :param params: Параметры действия (не используются).
+        """
+
+        try:
+            # Параметры
+            analysis_results_path = "/app/DCA_configs/analysis_results.json"
+            ideal_balance_path = "/app/DCA/configs/ideal_balance.json"
+
+            # Проверка существования файлов
+            if not os.path.exists(analysis_results_path):
+                logging.error(f"[ANALYZE_TRACK_BALANCE] Файл {analysis_results_path} не найден.")
+                return
+
+            if not os.path.exists(ideal_balance_path):
+                logging.error(f"[ANALYZE_TRACK_BALANCE] Файл {ideal_balance_path} не найден.")
+                return
+
+            # Загрузка данных
+            with open(analysis_results_path, "r", encoding="utf-8") as file:
+                analysis_results = json.load(file)
+
+            with open(ideal_balance_path, "r", encoding="utf-8") as file:
+                ideal_balance_data = json.load(file)
+
+            # Извлечение данных из файлов
+            total_tracks = analysis_results.get("total_tracks", 0)
+            our_tracks = analysis_results.get("our_tracks", 0)
+
+            ideal_balance = ideal_balance_data.get("ideal_balance", {})
+            ideal_our_ratio = ideal_balance.get("our_artists", 0)
+            ideal_external_ratio = ideal_balance.get("external_artists", 0)
+
+            # Проверка корректности данных
+            if ideal_our_ratio + ideal_external_ratio != 100:
+                logging.error("[ANALYZE_TRACK_BALANCE] Некорректное соотношение в ideal_balance.json.")
+                return
+
+            # Расчёт текущего и идеального соотношения
+            current_our_ratio = (our_tracks / total_tracks * 100) if total_tracks > 0 else 0.0
+            deviation_allowed = 5  # Допустимое отклонение в процентах
+
+            # Анализ соответствия
+            if abs(current_our_ratio - ideal_our_ratio) <= deviation_allowed:
+                balance_status = "Балансировка не требуется"
+                tracks_to_add = None
+            else:
+                balance_status = "Требуется балансировка"
+                ideal_our_tracks = int(total_tracks * ideal_our_ratio / 100)
+                ideal_external_tracks = total_tracks - ideal_our_tracks
+
+                if current_our_ratio > ideal_our_ratio:
+                    tracks_to_add = {
+                        "type": "external_artists",
+                        "count": max(0, ideal_external_tracks - (total_tracks - our_tracks))
+                    }
+                else:
+                    tracks_to_add = {
+                        "type": "our_artists",
+                        "count": max(0, ideal_our_tracks - our_tracks)
+                    }
+
+            # Дополнение результатов
+            analysis_results.update({
+                "balance_status": balance_status,
+                "tracks_to_add": tracks_to_add,
+                "ideal_our_ratio": ideal_our_ratio,
+                "current_our_ratio": round(current_our_ratio, 2),
+                "deviation_allowed": deviation_allowed
+            })
+
+            # Сохранение обновленных результатов
+            with open(analysis_results_path, "w", encoding="utf-8") as file:
+                json.dump(analysis_results, file, ensure_ascii=False, indent=4)
+
+            # Логирование
+            logging.info(f"[ANALYZE_TRACK_BALANCE] Анализ завершён. Результаты сохранены в {analysis_results_path}.")
+            print(f"Балансировка: {balance_status}")
+            if tracks_to_add:
+                print(f"Необходимо добавить {tracks_to_add['count']} треков типа {tracks_to_add['type']}.")
+
+        except Exception as e:
+            logging.error(f"[ANALYZE_TRACK_BALANCE] Ошибка: {e}")
+            print(f"Ошибка анализа баланса треков: {e}")
+
+    async def check_analysis_file_age(self, params):
+        """
+        Проверяет наличие и возраст файла /app/DCA_configs/analysis_results.json.
+        Если файл отсутствует или его возраст >= 7 дней, выводит сообщение.
+        Если возраст < 7 дней, прерывает выполнение вызывающей функции.
+        :param params: Параметры действия (не используются).
+        :return: True, если файл отсутствует или устарел; False, если файл актуален.
+        """
+        try:
+            # Путь к файлу анализа
+            analysis_results_path = "/app/DCA_configs/analysis_results.json"
+
+            # Проверяем существование файла
+            if not os.path.exists(analysis_results_path):
+                logging.warning("[CHECK_ANALYSIS_FILE_AGE] Файл отсутствует.")
+                print("Файл анализа отсутствует. Требуется выполнить новый анализ.")
+                return True
+
+            # Чтение файла
+            with open(analysis_results_path, "r", encoding="utf-8") as file:
+                analysis_results = json.load(file)
+
+            # Получение даты последнего обновления
+            last_updated = analysis_results.get("last_updated")
+            if not last_updated:
+                logging.warning("[CHECK_ANALYSIS_FILE_AGE] Дата обновления отсутствует в файле.")
+                print("Дата последнего обновления отсутствует. Требуется выполнить новый анализ.")
+                return True
+
+            # Проверка возраста файла
+            last_updated_date = datetime.strptime(last_updated, "%Y-%m-%d %H:%M:%S")
+            age_in_days = (datetime.now() - last_updated_date).days
+
+            if age_in_days >= 7:
+                logging.warning(f"[CHECK_ANALYSIS_FILE_AGE] Файл устарел ({age_in_days} дней).")
+                print(f"Файл анализа устарел ({age_in_days} дней). Требуется выполнить новый анализ.")
+                return True
+
+            # Файл актуален
+            logging.info(f"[CHECK_ANALYSIS_FILE_AGE] Файл актуален ({age_in_days} дней).")
+            return False
+
+        except Exception as e:
+            logging.error(f"[CHECK_ANALYSIS_FILE_AGE] Ошибка: {e}")
+            print(f"Ошибка проверки файла анализа: {e}")
+            return True
+
 
 ############################ [-END-] Balancer ############################
