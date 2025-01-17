@@ -1275,6 +1275,142 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[RETURN_TO_LIKED_MUSIC_ACTION] Ошибка: {e}")
 
+    async def run_def_collection_action(self, params):
+        """
+        Сервисная функция, осуществляющая сбор плейлистов по-умолчанию (вероятности из ideal_balance.json).
+        Выполняет все действия последовательно, с возможностью добавления логики.
+        """
+        try:
+            logging.info("[DEF_PLAYLIST_COLLECT] Начало ДЕФОЛТНОГО сбора плейлистов.")
+
+            await asyncio.sleep(5)  # Задержка для загрузки
+
+            # 1. Пропускаем рекламу (дважды, на случай задержки)
+            await self.skip_ad_action(params)
+            await self.skip_ad_action(params)
+
+            # 2. Нажимаем на кнопку поиска
+            await self.click_search_action(params)
+
+            # 3. Выбираем случайного артиста и вводим его в строку поиска
+            #await self.select_artist_action({})
+            await self.select_artist_action({})
+
+            # 4. Ждем загрузки результатов поиска
+            await asyncio.sleep(params.get("wait_after_search", 4))
+
+            # 5. Открываем вкладку альбомов
+            await self.open_albums_tab_action(params)
+
+            # 6. Ждем загрузки вкладки альбомов
+            await asyncio.sleep(params.get("wait_after_albums", 2))
+
+            # 7. Выбираем случайный альбом и запускаем его воспроизведение
+            await self.select_random_album_action(params)
+
+            # 8. Собираем треки из плейлиста
+            await self.collect_playlist_tracks_action(params)
+
+            # 9. Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
+
+            logging.info("[DEF_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
+
+        except Exception as e:
+            logging.error(f"[DEF_PLAYLIST_COLLECT] Ошибка выполнения рабочего процесса: {e}")
+
+    async def run_our_artists_collection_action(self, params):
+        """
+        Сервисная функция, осуществляющая сбор плейлистов только из our_artists.
+        Выполняет все действия последовательно, с возможностью добавления логики.
+        """
+        try:
+            logging.info("[OUR_PLAYLIST_COLLECT] Начало OUR_ARTISTS сбора плейлистов.")
+
+            await asyncio.sleep(5)  # Задержка для загрузки
+
+            # 1. Пропускаем рекламу (дважды, на случай задержки)
+            await self.skip_ad_action(params)
+            await self.skip_ad_action(params)
+
+            # 2. Нажимаем на кнопку поиска
+            await self.click_search_action(params)
+
+            # 3. Выбираем нашего артиста и вводим его в строку поиска
+            await self.select_artist_action({
+                "our_artist_weight": 100,
+                "external_artist_weight": 0
+            })
+
+            # 4. Ждем загрузки результатов поиска
+            await asyncio.sleep(params.get("wait_after_search", 4))
+
+            # 5. Открываем вкладку альбомов
+            await self.open_albums_tab_action(params)
+
+            # 6. Ждем загрузки вкладки альбомов
+            await asyncio.sleep(params.get("wait_after_albums", 2))
+
+            # 7. Выбираем случайный альбом и запускаем его воспроизведение
+            await self.select_random_album_action(params)
+
+            # 8. Собираем треки из плейлиста
+            await self.collect_playlist_tracks_action(params)
+
+            # 9. Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
+
+            logging.info("[OUR_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
+
+        except Exception as e:
+            logging.error(f"[OUR_PLAYLIST_COLLECT] Ошибка выполнения рабочего процесса: {e}")
+
+    async def run_external_artists_collection_action(self, params):
+        """
+        Сервисная функция, осуществляющая сбор плейлистов только из external_artists.
+        Выполняет все действия последовательно, с возможностью добавления логики.
+        """
+        try:
+            logging.info("[EXTERNAL_PLAYLIST_COLLECT] Начало EXTERNAL_ARTISTS сбора плейлистов.")
+
+            await asyncio.sleep(5)  # Задержка для загрузки
+
+            # 1. Пропускаем рекламу (дважды, на случай задержки)
+            await self.skip_ad_action(params)
+            await self.skip_ad_action(params)
+
+            # 2. Нажимаем на кнопку поиска
+            await self.click_search_action(params)
+
+            # 3. Выбираем нашего артиста и вводим его в строку поиска
+            await self.select_artist_action({
+                "our_artist_weight": 0,
+                "external_artist_weight": 100
+            })
+
+            # 4. Ждем загрузки результатов поиска
+            await asyncio.sleep(params.get("wait_after_search", 4))
+
+            # 5. Открываем вкладку альбомов
+            await self.open_albums_tab_action(params)
+
+            # 6. Ждем загрузки вкладки альбомов
+            await asyncio.sleep(params.get("wait_after_albums", 2))
+
+            # 7. Выбираем случайный альбом и запускаем его воспроизведение
+            await self.select_random_album_action(params)
+
+            # 8. Собираем треки из плейлиста
+            await self.collect_playlist_tracks_action(params)
+
+            # 9. Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
+
+            logging.info("[EXTERNAL_PLAYLIST_COLLECT] Рабочий процесс сбора плейлистов завершен успешно.")
+
+        except Exception as e:
+            logging.error(f"[EXTERNAL_PLAYLIST_COLLECT] Ошибка выполнения рабочего процесса: {e}")
+
     async def playlist_collection_workflow(self, params):
         """
         Интеллектуальная функция для управления процессом сбора плейлистов.
@@ -1288,42 +1424,47 @@ class ScriptActions:
             if is_first_launch:
                 logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Это первый запуск за сегодня.")
 
-            await asyncio.sleep(5)  # Задержка для загрузки
+            # Проверяем наличие файла анализа
+            analysis_results_path = "/app/DCA_configs/analysis_results.json"
+            if not os.path.exists(analysis_results_path):
+                logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Файл анализа не найден.")
+                if random.random() < 0.3:  # Вероятность 30%
+                    await self.run_def_collection_action(params)
+                else:
+                    logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Выполнение прервано (70%).")
+                    return
 
-            # 2. Пропускаем рекламу (дважды, на случай задержки)
-            await self.skip_ad_action(params)
-            await self.skip_ad_action(params)
+            else:
+                # Загружаем данные из файла анализа
+                with open(analysis_results_path, "r", encoding="utf-8") as file:
+                    analysis_results = json.load(file)
 
-            # 3. Нажимаем на кнопку поиска
-            await self.click_search_action(params)
+                total_tracks = analysis_results.get("total_tracks", 0)
+                balance_status = analysis_results.get("balance_status", "")
+                logging.info(f"[PLAYLIST_COLLECTION_WORKFLOW] total_tracks={total_tracks}, balance_status={balance_status}")
 
-            # 4. Выбираем случайного артиста и вводим его в строку поиска
-            #await self.select_artist_action({})
-            await self.select_artist_action({
-                "our_artist_weight": 100,
-                "external_artist_weight": 0
-            })
+                # Проверяем общее количество треков
+                if total_tracks < 50:
+                    logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Общее количество треков < 50. Запускаем сбор по умолчанию.")
+                    await self.run_def_collection_action(params)
+                    return
 
+                # Проверяем балансировку
+                if balance_status == "Балансировка не требуется":
+                    if random.random() < 0.3:  # Вероятность 30%
+                        await self.run_def_collection_action(params)
+                    else:
+                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Выполнение прервано (70%).")
+                        return
 
-            # 5. Ждем загрузки результатов поиска
-            await asyncio.sleep(params.get("wait_after_search", 4))
-
-            # 6. Открываем вкладку альбомов
-            await self.open_albums_tab_action(params)
-
-            # 7. Ждем загрузки вкладки альбомов
-            await asyncio.sleep(params.get("wait_after_albums", 2))
-
-            # 8. Выбираем случайный альбом и запускаем его воспроизведение
-            await self.select_random_album_action(params)
-
-            # 9. Собираем треки из плейлиста
-            await self.collect_playlist_tracks_action(params)
-
-            # 10. Возвращаемся к плейлисту Liked Music
-            await self.return_to_liked_music_action(params)
-
-            logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Рабочий процесс сбора плейлистов завершен успешно.")
+                elif balance_status == "Требуется балансировка":
+                    tracks_to_add = analysis_results.get("tracks_to_add", {})
+                    if tracks_to_add.get("type") == "external_artists":
+                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону наших исполнителей.")
+                        await self.run_external_artists_collection_action(params)
+                    elif tracks_to_add.get("type") == "our_artists":
+                        logging.info("[PLAYLIST_COLLECTION_WORKFLOW] Дисбаланс в сторону внешних исполнителей.")
+                        await self.run_our_artists_collection_action(params)
 
         except Exception as e:
             logging.error(f"[PLAYLIST_COLLECTION_WORKFLOW] Ошибка выполнения рабочего процесса: {e}")
