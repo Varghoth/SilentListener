@@ -55,6 +55,7 @@ class ScriptActions:
             "random_action": self.random_action,
             "scroll_and_click": self.scroll_and_click_action,
             "fast_scroll_up_and_click": self.fast_scroll_up_and_click_action,
+            "no_interface_error": self.no_interface_error_action,
             ###################### Сбор Плейлистов ######################
             "check_first_launch": self.check_first_launch_action,
             "click_search": self.click_search_action,
@@ -951,6 +952,42 @@ class ScriptActions:
             
         except Exception as e:
             logging.error(f"[FAST_SCROLL_UP_AND_CLICK_ACTION] Ошибка: {e}")
+
+    async def no_interface_error_action(self, params):
+        """
+        Проверяет наличие темплейта 'no_interface_error' на экране.
+        Если темплейт найден, выводит сообщение. Если не найден в течение трёх попыток,
+        выполняет клавиатурную комбинацию ctrl+r для обновления страницы.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.75)  # Порог совпадения по умолчанию
+            max_attempts = 3  # Максимальное количество попыток
+            interval = 3  # Интервал между попытками в секундах
+
+            logging.info("[NO_INTERFACE_ERROR_ACTION] Начало выполнения.")
+            screen_service = ScreenService()
+
+            for attempt in range(1, max_attempts + 1):
+                logging.info(f"[NO_INTERFACE_ERROR_ACTION] Попытка {attempt} из {max_attempts}.")
+
+                # Проверяем наличие темплейта 'no_interface_error'
+                if screen_service.is_template_on_screen("no_interface_error", threshold):
+                    logging.info("[NO_INTERFACE_ERROR_ACTION] Темплейт 'no_interface_error' найден.")
+                    return  # Прерываем выполнение, если темплейт найден
+
+                # Задержка перед следующей попыткой
+                await asyncio.sleep(interval)
+
+            # Если темплейт не найден после трёх попыток, выполняем ctrl+r
+            logging.info("[NO_INTERFACE_ERROR_ACTION] Темплейт 'no_interface_error' не найден. Обновляем страницу.")
+            pyautogui.hotkey("ctrl", "r")
+            logging.info("[NO_INTERFACE_ERROR_ACTION] Выполнена комбинация клавиш ctrl+r.")
+
+            await self.skip_ad_action(params)
+
+        except Exception as e:
+            logging.error(f"[NO_INTERFACE_ERROR_ACTION] Ошибка: {e}")
 
 ############################ [END] Управление стримингами ############################
 
