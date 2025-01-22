@@ -10,6 +10,7 @@ import threading
 import os
 import re
 import random
+import shutil
 import pytesseract
 from PIL import Image
 from datetime import datetime, timedelta
@@ -17,6 +18,10 @@ from datetime import datetime, timedelta
 from global_storage import get_full_path
 from modules.screen_service import ScreenService
 from modules.mouse_service import MouseController
+
+# Пути
+EXTENSIONS_SRC_DIR = "/app/DCA/firefox_extensions"  # Каталог с сохранёнными расширениями
+FIREFOX_EXTENSIONS_DIR = "/root/.mozilla/firefox/*.default-release/extensions"  # Каталог профиля Firefox
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
@@ -67,6 +72,8 @@ class ScriptActions:
             "save_page": self.save_page_action,
             "parse_liked_tracks": self.parse_liked_tracks_action,
             "playlist_collection_workflow": self.playlist_collection_workflow,
+            ###################### Fingerprint ######################
+            "generate_user_profile": self.generate_user_profile_action,
         }
 
     async def log_message_action(self, params):
@@ -1844,5 +1851,88 @@ class ScriptActions:
             print(f"Ошибка проверки файла анализа: {e}")
             return True
 
-
 ############################ [-END-] Balancer ############################
+
+############################ [START] Fingerprint ############################
+    async def generate_user_profile_action(self, params):
+        """
+        Проверяет, имеется ли уже сгенерированный профиль в каталоге.
+        Если профиль отсутствует, генерирует новый.
+        Если в профиле отсутствуют данные, добавляет недостающие.
+        """
+        try:
+            # Заданные пути
+            config_path = "/app/DCA/configs/generation_config.json"  # Путь к конфигурации
+            profile_dir = "/app/DCA_configs"  # Каталог для хранения профилей
+            profile_path = os.path.join(profile_dir, "user_profile.json")  # Путь к профилю
+
+            # Проверка наличия файла конфигурации
+            if not os.path.exists(config_path):
+                logging.error(f"Файл конфигурации {config_path} не найден.")
+                return
+
+            # Загрузка конфигурации генерации
+            try:
+                with open(config_path, "r", encoding="utf-8") as config_file:
+                    config = json.load(config_file)
+                    if not isinstance(config, dict):
+                        raise ValueError("Файл конфигурации должен быть JSON-объектом.")
+            except json.JSONDecodeError as e:
+                logging.error(f"Ошибка чтения JSON из файла конфигурации: {e}")
+                return
+            except ValueError as e:
+                logging.error(f"Ошибка в формате файла конфигурации: {e}")
+                return
+
+            # Создание каталога для профилей, если он не существует
+            os.makedirs(profile_dir, exist_ok=True)
+
+            # Проверка существующего профиля
+            if os.path.exists(profile_path):
+                try:
+                    with open(profile_path, "r", encoding="utf-8") as profile_file:
+                        profile = json.load(profile_file)
+                        if not isinstance(profile, dict):
+                            raise ValueError("Файл профиля должен быть JSON-объектом.")
+                except json.JSONDecodeError as e:
+                    logging.error(f"Ошибка чтения JSON из файла профиля: {e}")
+                    return
+                except ValueError as e:
+                    logging.error(f"Ошибка в формате файла профиля: {e}")
+                    return
+
+                # Проверка на наличие недостающих данных
+                updated = False
+                for key, values in config.items():
+                    if key not in profile or not profile[key]:
+                        if isinstance(values, list) and values:
+                            profile[key] = random.choice(values)
+                            logging.info(f"Добавлено недостающее поле '{key}' в профиль.")
+                            updated = True
+                        else:
+                            logging.warning(f"Пропущено поле '{key}': значения отсутствуют в конфигурации.")
+
+                # Сохранение обновленного профиля
+                if updated:
+                    with open(profile_path, "w", encoding="utf-8") as profile_file:
+                        json.dump(profile, profile_file, ensure_ascii=False, indent=4)
+                    logging.info(f"Профиль обновлен: {profile_path}")
+                else:
+                    logging.info(f"Профиль уже содержит все необходимые данные: {profile_path}")
+            else:
+                # Генерация нового профиля
+                profile = {}
+                for key, values in config.items():
+                    if isinstance(values, list) and values:
+                        profile[key] = random.choice(values)
+                    else:
+                        logging.warning(f"Пропущено поле '{key}': значения отсутствуют в конфигурации.")
+
+                with open(profile_path, "w", encoding="utf-8") as profile_file:
+                    json.dump(profile, profile_file, ensure_ascii=False, indent=4)
+                logging.info(f"Создан новый профиль: {profile_path}")
+
+        except Exception as e:
+            logging.error(f"Ошибка при обработке профиля: {e}")
+
+############################ [-END-] Fingerprint ############################

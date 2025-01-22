@@ -1,0 +1,62 @@
+{
+    "userAgents": [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/110.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/109.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"
+    ],
+    "screenResolutions": [
+        {"width": 2560, "height": 1440},
+        {"width": 1920, "height": 1080},
+        {"width": 1680, "height": 1050}
+    ],
+    "deviceMemories": [8, 16, 32],
+    "hardwareConcurrencies": [4, 6, 8],
+    "languages": ["en-US", "en-GB", "en-AU"],
+    "webGL": {
+        "Google Inc.": [
+            "ANGLE (Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)",
+            "ANGLE (Intel(R) Iris Xe Graphics Direct3D11 vs_5_0 ps_5_0)",
+            "ANGLE (NVIDIA GeForce GTX 1050 Direct3D11 vs_5_0 ps_5_0)"
+        ],
+        "NVIDIA Corporation": [
+            "GeForce RTX 2060 OpenGL Engine",
+            "GeForce GTX 1060 OpenGL Engine",
+            "GeForce GTX 3060 OpenGL Engine",
+            "GeForce GTX 4060 OpenGL Engine"
+        ],
+        "AMD Inc.": [
+            "AMD Radeon RX 5700 OpenGL Engine",
+            "AMD Radeon RX 5500 XT OpenGL Engine",
+            "AMD Radeon Vega 8 Graphics OpenGL Engine"
+        ],
+        "Intel Inc.": [
+            "Intel(R) HD Graphics 620 OpenGL Engine",
+            "Intel(R) UHD Graphics 620 OpenGL Engine",
+            "Intel(R) Iris Xe Graphics OpenGL Engine"
+        ]
+    },
+    "platforms": ["Win32", "Win64"],
+    "navigatorProperties": {
+        "appName": ["Netscape"],
+        "appCodeName": ["Mozilla"],
+        "appVersion": [
+            "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+            "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/110.0.0.0 Safari/537.36",
+            "5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"
+        ],
+        "product": ["Gecko"],
+        "productSub": ["20030107"],
+        "vendor": ["Google Inc.", "Mozilla Foundation", "Microsoft Corporation"],
+        "vendorSub": [""]
+    },
+    "canvasFingerprints": [
+        "NoisyCanvasFingerprint1",
+        "NoisyCanvasFingerprint2",
+        "NoisyCanvasFingerprint3"
+    ]
+}

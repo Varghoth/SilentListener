@@ -35,6 +35,20 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+    # Добавляем репозиторий NVIDIA
+    RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/cuda-keyring_1.1-1_all.deb && \
+        dpkg -i cuda-keyring_1.1-1_all.deb && \
+        apt-get update && \
+        apt-get install -y --no-install-recommends \
+        mesa-utils \
+        libgl1-mesa-dri \
+        libegl1-mesa \
+        libgles2-mesa \
+        cuda-toolkit-12-0 && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*
+
+
     # Установка Python и pip
     RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip && \
         apt-get clean && rm -rf /var/lib/apt/lists/*

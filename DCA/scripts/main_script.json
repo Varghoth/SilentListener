@@ -9,6 +9,16 @@
                         "duration": 5
                     }
                 },
+
+                                
+
+                {
+                    "action": "generate_user_profile",
+                    "params": {}
+                },
+
+
+                
                 {
                     "action": "make_firefox_focus",
                     "params": {}
@@ -85,6 +95,12 @@
                     "action": "wait",
                     "params": {
                         "duration": 2
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
                     }
                 },
                 {
