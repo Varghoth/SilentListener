@@ -202,10 +202,18 @@ class ScriptActions:
         try:
             threshold = params.get("threshold", 0.9)
 
+            # Путь к Firefox и профилю
+            firefox_dir = "/app/DCA/firefox"
+            profile_dir = f"{firefox_dir}/profiles"
+
+            # Убедимся, что каталог профилей существует
+            os.makedirs(profile_dir, exist_ok=True)
+            logging.info(f"[MAKE_FIREFOX_FOCUS_ACTION] Каталог профилей проверен: {profile_dir}")
+
             # Проверка: запущен ли Firefox
             logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Проверяем, запущен ли Firefox.")
             result = subprocess.run(
-                ["pgrep", "-f", "firefox"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                ["pgrep", "-f", f"{firefox_dir}/firefox"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             if result.returncode == 0:
                 logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox уже запущен.")
@@ -213,7 +221,12 @@ class ScriptActions:
                 # Запуск Firefox с параметрами
                 logging.info("[MAKE_FIREFOX_FOCUS_ACTION] Firefox не запущен. Запускаем браузер.")
                 subprocess.Popen(
-                    ["firefox", "--start-maximized"],
+                    [
+                        f"{firefox_dir}/firefox",
+                        f"--profile",
+                        f"{profile_dir}",
+                        "--start-maximized"
+                    ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     env=os.environ.copy()

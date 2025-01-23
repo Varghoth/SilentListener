@@ -35,20 +35,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-    # Добавляем репозиторий NVIDIA
-    RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/cuda-keyring_1.1-1_all.deb && \
-        dpkg -i cuda-keyring_1.1-1_all.deb && \
-        apt-get update && \
-        apt-get install -y --no-install-recommends \
-        mesa-utils \
-        libgl1-mesa-dri \
-        libegl1-mesa \
-        libgles2-mesa \
-        cuda-toolkit-12-0 && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/*
-
-
     # Установка Python и pip
     RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip && \
         apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -79,30 +65,6 @@ RUN apt-get update && \
         echo "autospawn = yes" > /root/.config/pulse/client.conf && \
         echo "exit-idle-time = -1" > /root/.config/pulse/daemon.conf
 
-############################# [START] Установка Firefox #############################
-# Используем --no-check-certificate для обхода ошибки сертификатов
-RUN wget --no-check-certificate -O firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US" && \
-    tar xjf firefox.tar.bz2 -C /opt/ && \
-    ln -s /opt/firefox/firefox /usr/local/bin/firefox && \
-    ln -s /opt/firefox/firefox /usr/bin/firefox && \
-    rm firefox.tar.bz2
-
-# Устанавливаем Firefox как браузер по умолчанию
-RUN update-alternatives --install /usr/bin/x-www-browser x-www-browser /usr/bin/firefox 100 && \
-    update-alternatives --set x-www-browser /usr/bin/firefox && \
-    update-alternatives --install /usr/bin/gnome-www-browser gnome-www-browser /usr/bin/firefox 100 && \
-    update-alternatives --set gnome-www-browser /usr/bin/firefox
-
-# Настройка Firefox
-RUN mkdir -p /root/.mozilla/firefox/default-release && \
-    echo 'user_pref("browser.sessionstore.resume_from_crash", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    echo 'user_pref("browser.tabs.warnOnClose", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    echo 'user_pref("media.hardware-video-decoding.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js && \
-    echo 'user_pref("gfx.webrender.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js \
-    echo 'user_pref("media.peerconnection.enabled", false);' >> /root/.mozilla/firefox/default-release/prefs.js
-
-############################# [END] Установка Firefox #############################
-
 ############################# [START] Установка DCA #############################
 # Копируем директорию DCA в контейнер
 COPY DCA /app/DCA
@@ -131,10 +93,6 @@ RUN mkdir -p /root/.vnc && \
 # Создаем xstartup файл для запуска Xfce
 RUN echo "#!/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &" > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup
-
-# Вносим в конт настроенный профиль firefox
-COPY fox.blocked.settings/autoconfig.js /opt/firefox/defaults/pref/autoconfig.js
-COPY fox.blocked.settings/firefox.cfg /opt/firefox/firefox.cfg
 
 ############################# [START] SUPERVISORD #############################
 

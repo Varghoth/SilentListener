@@ -57,3 +57,8 @@ docker exec -it test_kont bash
 
 #Запуск приложения
 python3 app/DCA/agent.py
+
+#####################################
+
+docker run -d -p 5903:5901 --name test_new_210125 test_new_210125
+docker exec -it test_new_210125 bash
