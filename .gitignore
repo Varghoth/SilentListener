@@ -1,2 +1,4 @@
-DCA/firefox/
-DCA/librewolf/
+*.log
+node_modules
+tmp
+*.so
