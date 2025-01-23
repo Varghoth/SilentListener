@@ -1,3 +1,21 @@
+##230125
+В проект добавлена стабильная версия firefox, к сожалению файлы велики и ее сложно залить на github.
+Архив придется скачать и распаковать вручную:
+https://download.mozilla.org/?product=firefox-esr-latest-ssl&os=linux64&lang=en-US&_gl=1*vrhc7s*_ga*MTcxNDA4NjU5OS4xNzI2Mzk5NzY3*_ga_MQ7767QQQW*MTczNzYyODE2OC4zLjEuMTczNzYyODI0Ny4wLjAuMA..
+
+После распаковки архива с Firefox-DSR в каталог DCA/firefox, в DCA/firefox необходимо создать каталог distribution.
+В каталоге DCA/firefox/distribution необходимо создать файл policies.json со следующим содержимым:
+
+{
+    "policies": {
+        "DisableAppUpdate": true,
+        "DisableTelemetry": true,
+        "DisableFirefoxStudies": true
+    }
+}
+
+Это предотвратит автоматическое обновление браузера, телеметрию.
+
 ## Модуль Playlist Collector
 - Местоположение: DCA/modules/playlist_collector.py
 - Функционал:
