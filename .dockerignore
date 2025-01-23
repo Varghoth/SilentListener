@@ -3,5 +3,4 @@
 *.log
 node_modules
 tmp
-DCA/firefox/*.so
-DCA/firefox/*.ja
+DCA/firefox/
