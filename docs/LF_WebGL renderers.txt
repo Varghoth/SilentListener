@@ -1,0 +1,334 @@
+240125
+
+0.10%
+ANGLE (Intel Inc., Intel(R) Iris(TM) Plus Graphics OpenGL Engine, OpenGL 4.1)
+
+0.15 %
+ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.32 %
+ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0), or similar
+
+0.11 %
+ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E9B) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+5.12 %
+ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)
+
+0.05 %
+ANGLE (Intel Inc., Intel(R) Iris(TM) Plus Graphics 645, OpenGL 4.1)
+
+0.47 %
+ANGLE (Intel, Intel(R) HD Graphics Direct3D11 vs_5_0 ps_5_0), or similar
+
+0.08 %
+ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A1) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+1.80 %
+Intel Iris OpenGL Engine
+
+0.11 %
+ANGLE (Intel, Intel(R) UHD Graphics (0x00009BC4) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.05 %
+ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00009BC8) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.23 %
+Intel(R) HD Graphics 400, or similar
+
+0.14 %
+ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A8) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.06 %
+ANGLE (Intel Inc., Intel Iris Pro OpenGL Engine, OpenGL 4.1)
+
+0.09 %
+ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.10 %
+ANGLE (Intel, Intel(R) HD Graphics 620 (0x00005916) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.05 %
+ANGLE (Intel Inc., Intel(R) Iris(TM) Plus Graphics 640, OpenGL 4.1)
+
+0.97 %
+ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0)
+
+0.27 %
+Intel(R) HD Graphics, or similar
+
+0.05 %
+ANGLE (Intel, Intel(R) UHD Graphics (0x00009A78) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.14 %
+ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x000046A6) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+0.80 %
+Intel(R) HD Graphics 400 
+
+0.10 %
+ANGLE (Intel, Intel(R) HD Graphics 520 (0x00001916) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.09 %
+ANGLE (Intel, Intel(R) HD Graphics Direct3D9Ex vs_3_0 ps_3_0, igdumd64.dll)
+
+0.07 %
+ANGLE (Intel, Intel(R) UHD Graphics 630 (0x00003E92) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.14 %
+ANGLE (Intel, Intel(R) HD Graphics 530 Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.18 %
+ANGLE (Intel Inc., Intel(R) UHD Graphics 630, OpenGL 4.1)
+
+0.35 %
+Google SwiftShader
+
+0.17 %
+ANGLE (Intel, Intel(R) UHD Graphics (0x00009B41) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.17 %
+ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00005917) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.06 %
+ANGLE (Intel Inc., Intel(R) Iris(TM) Plus Graphics 655, OpenGL 4.1)
+
+0.05 %
+ANGLE (Intel, Intel(R) HD Graphics 3000 Direct3D9Ex vs_3_0 ps_3_0, igdumd64.dll)
+
+0.06 %
+3672
+
+1.00 %
+Intel(R) HD Graphics
+
+0.96 %
+ANGLE (Intel, Intel(R) HD Graphics Direct3D11 vs_5_0 ps_5_0)
+
+
+
+
+
+
+
+
+
+
+
+
+0.52 %
+ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.10 %
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.15 %
+ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.10 %
+ANGLE (AMD, AMD Radeon(TM) Graphics (0x0000164C) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+0.06 %
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1070 (0x00001B81) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001636) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+Radeon HD 3200 Graphics
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 SUPER (0x000021C4) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Ti (0x00002489) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA Corporation, Quadro K600/PCIe/SSE2, OpenGL 4.5.0)
+
+
+ANGLE (AMD, AMD Radeon R7 200 Series (0x00006658) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060/PCIe/SSE2, OpenGL 4.5.0)
+
+
+NVIDIA GeForce GTX 980, or similar
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Ti (0x00002486) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2060/PCIe/SSE2, OpenGL 4.5.0)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 (0x00001E89) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon (TM) Graphics (0x000015E7) Direct3D11 vs_5_0 ps_5_0, D3D11) #dRsdjcRCsX
+
+
+ANGLE (AMD, AMD Radeon(TM) RX 560 Series Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, Radeon RX550/550 Series Direct3D11 vs_5_0 ps_5_0, D3D11-27.20.1017.1011)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 650/PCIe/SSE2, OpenGL 4.5.0)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 SUPER Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Ti (0x000024C9) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon HD 6370D Direct3D9Ex vs_3_0 ps_3_0, D3D9Ex)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1650 Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA Corporation, GeForce GT 730/PCIe/SSE2, OpenGL 4.5.0)
+
+
+ANGLE (NVIDIA Corporation, Quadro P620/PCIe/SSE2, OpenGL 4.5.0)
+
+
+ANGLE (NVIDIA, NVIDIA Quadro P3200 (0x00001BBB) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon RX 6750 XT (0x000073DF) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0), or similar
+
+
+ANGLE (AMD, Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0), or similar
+
+
+ANGLE (ATI Technologies Inc., AMD Radeon Pro 5300M OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C81) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 Ti (0x00001C82) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1650 (0x00002188) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Ti (0x00002182) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon RX 6600 (0x000073FF) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD Radeon R7 430 Direct3D11 vs_5_0 ps_5_0)
+
+
+ANGLE (NVIDIA GeForce GTX 1050 Direct3D11 vs_5_0 ps_5_0)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1650 (0x00001F91) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (ATI Technologies Inc., AMD Radeon Pro 5500M OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 (0x00002507) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, AMD Radeon (TM) Graphics (0x000015E7) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (ATI Technologies Inc., AMD Radeon Pro 580 OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (AMD, Radeon HD 3200 Graphics Direct3D11 vs_5_0 ps_5_0), or similar
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER Direct3D11 vs_5_0 ps_5_0, D3D11-30.0.14.7284)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 6GB (0x00001B83) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 2070 SUPER (0x00001E84) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (Samsung Electronics Co. Ltd., ANGLE (Samsung Xclipse 920) on Vulkan 1.3.231, OpenGL ES 3.2)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Ti (0x00002803) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA GeForce GTX 680 Direct3D9Ex vs_0_0 ps_2_0)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2060 SUPER/PCIe/SSE2, OpenGL 4.5.0)
+
+
+GeForce GTX 480
+
+
+ANGLE (ATI Technologies Inc., AMD Radeon RX Vega 64 OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 670/PCIe/SSE2, OpenGL 4.5.0)
+
+
+Radeon HD 3200 Graphics, or similar
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 1660 Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce GTX 980 (0x000013C0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA Quadro P400 (0x00001CB3) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce 9600 GT (0x00000622) Direct3D11 vs_4_0 ps_4_0, D3D11)
+
+
+ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Ti Laptop GPU (0x000025A0) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (ATI Technologies Inc., AMD Radeon Pro 580X OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (AMD, AMD Radeon RX 6600 XT (0x000073FF) Direct3D11 vs_5_0 ps_5_0, D3D11)
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 1060 6GB/PCIe/SSE2, OpenGL 4.5.0)
+
+
+GeForce GTX 480, or similar
+
+
+Radeon R9 200 Series, or similar
+
+
+ANGLE (NVIDIA Corporation, NVIDIA GeForce GTX 660M OpenGL Engine, OpenGL 4.1)
+
+
+ANGLE (NVIDIA, Vulkan 1.3.277 (NVIDIA NVIDIA GeForce GTX 1050 Ti (0x00001C82)), NVIDIA)
+
+
+ANGLE (AMD, Radeon (TM) RX 470 Graphics (0x000067DF) Direct3D11 vs_5_0 ps_5_0, D3D11)

@@ -2,6 +2,26 @@
     "policies": {
         "DisableAppUpdate": true,
         "DisableTelemetry": true,
-        "DisableFirefoxStudies": true
+        "DisableFirefoxStudies": true,
+        "Autoplay": {
+            "Default": true,
+            "Allow": [
+                "https://music.youtube.com"
+            ]
+        },
+        "Extensions": {
+            "Install": [
+                "/app/DCA/firefox/ads/canvasblocker-1.11.xpi",
+                "/app/DCA/firefox/ads/chameleon_ext-0.22.69.1.xpi",
+                "/app/DCA/firefox/ads/ublock_origin-1.62.0.xpi",
+                "/app/DCA/firefox/ads/browsec-3.88.3.xpi"
+            ],
+            "Locked": [
+                "CanvasBlocker@kkapsner.de",
+                "chameleon@sereneblue.github.io",
+                "uBlock0@raymondhill.net"
+            ],
+            "Update": false
+        }
     }
 }

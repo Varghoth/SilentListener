@@ -248,24 +248,34 @@ class ScriptActions:
 
     async def select_youtube_tab_action(self, params):
         """
-        Проверяет наличие шаблона вкладки YouTube и нажимает на него, если он найден.
+        Проверяет наличие заголовка страницы YouTube и переключает вкладки, если он не найден.
         :param params: Параметры действия (например, "threshold").
         """
         try:
             threshold = params.get("threshold", 0.9)
+            max_attempts = 12  # Максимальное количество попыток
 
-            # Проверяем наличие шаблона YouTube
-            logging.info("[SELECT_YOUTUBE_TAB_ACTION] Проверяем наличие вкладки YouTube.")
+            logging.info("[SELECT_YOUTUBE_TAB_ACTION] Проверяем наличие заголовка страницы YouTube.")
             screen_service = ScreenService()
-            mouse_controller = MouseController(self.project_dir)
 
-            if screen_service.is_template_on_screen("youtube_music_tab", threshold):
-                logging.info("[SELECT_YOUTUBE_TAB_ACTION] Вкладка YouTube найдена. Выполняем клик.")
-                screen_service.interact_with_template("youtube_music_tab", mouse_controller, threshold)
-            else:
-                logging.error("[SELECT_YOUTUBE_TAB_ACTION] Вкладка YouTube не найдена. Проверьте шаблоны.")
+            for attempt in range(max_attempts):
+                logging.info(f"[SELECT_YOUTUBE_TAB_ACTION] Попытка {attempt + 1} из {max_attempts}.")
+
+                # Проверяем наличие заголовка страницы YouTube
+                if screen_service.is_template_on_screen("youtube_page_header", threshold):
+                    logging.info("[SELECT_YOUTUBE_TAB_ACTION] Заголовок страницы YouTube найден. Продолжаем выполнение.")
+                    return
+
+                # Если заголовок не найден, переключаем вкладку
+                logging.info("[SELECT_YOUTUBE_TAB_ACTION] Заголовок страницы YouTube не найден. Переключаем вкладку.")
+                pyautogui.hotkey("ctrl", "tab")
+                await asyncio.sleep(1)  # Небольшая задержка после переключения вкладки
+
+            logging.error("[SELECT_YOUTUBE_TAB_ACTION] Не удалось найти заголовок страницы YouTube после максимального числа попыток.")
+
         except Exception as e:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
+
 
 ############################ [START] Управление стримингами ############################
     async def do_nothing(self, params):
@@ -1619,8 +1629,8 @@ class ScriptActions:
                     logging.error("[SAVE_PAGE_ACTION] Не удалось нажать на 'blncr_arrow.down'.")
                     return
 
-                # Сдвиг мыши для выбора формата
-                pyautogui.move(0, 2)
+                # Клавишу вверх для отображения всего списка
+                pyautogui.hotkey("up")
 
                 # Нажатие на 'blncr_textfiles'
                 if not screen_service.interact_with_template("blncr_textfiles", mouse_controller, threshold):
