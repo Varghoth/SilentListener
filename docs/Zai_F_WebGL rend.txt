@@ -1,0 +1,14 @@
+0.32 %
+ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0), or similar
+
+0.97 %
+ANGLE (Intel, Intel(R) HD Graphics 400 Direct3D11 vs_5_0 ps_5_0)
+
+1.00 %
+Intel(R) HD Graphics
+
+0.47 %
+ANGLE (Intel, Intel(R) HD Graphics Direct3D11 vs_5_0 ps_5_0), or similar
+
+0.96 %
+ANGLE (Intel, Intel(R) HD Graphics Direct3D11 vs_5_0 ps_5_0)

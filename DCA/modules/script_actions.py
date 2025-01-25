@@ -276,7 +276,6 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
 
-
 ############################ [START] Управление стримингами ############################
     async def do_nothing(self, params):
         """Ничего не делает."""
