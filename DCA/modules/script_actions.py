@@ -38,6 +38,7 @@ class ScriptActions:
             "click_template": self.click_template_action,
             "make_firefox_focus": self.make_firefox_focus_action,
             "select_youtube_tab": self.select_youtube_tab_action,
+            "random_wait_and_shutdown": self.random_wait_and_shutdown_action,
             ###################### Управление Стримингами ######################
             "do_nothing": self.do_nothing,
             "set_streaming_play": self.set_streaming_play_action,
@@ -275,6 +276,64 @@ class ScriptActions:
 
         except Exception as e:
             logging.error(f"[SELECT_YOUTUBE_TAB_ACTION] Ошибка: {e}")
+
+    async def random_wait_and_shutdown_action(self, params):
+        """
+        Запускает асинхронный таймер, который выполняет действия по истечении времени.
+        После выполнения таймер завершает ВСЁ.
+        """
+        async def run_timer():
+            try:
+                # Получаем параметры времени
+                guaranteed_hours = params.get("guaranteed_hours", 0)
+                guaranteed_minutes = params.get("guaranteed_minutes", 0)
+                randomization_range = params.get("randomization_range_minutes", 0)
+                actions = params.get("actions", [])
+
+                # Переводим гарантированное время в секунды
+                guaranteed_time = guaranteed_hours * 3600 + guaranteed_minutes * 60
+
+                # Генерируем случайное время для рандомизации
+                random_offset = random.randint(0, randomization_range * 60)
+
+                # Итоговое время ожидания
+                total_wait_time = guaranteed_time + random_offset
+                logging.info(f"[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Таймер запущен на {total_wait_time // 60} минут "
+                            f"({guaranteed_hours} ч {guaranteed_minutes} мин + случайные {random_offset // 60} мин).")
+
+                # Таймер
+                await asyncio.sleep(total_wait_time)
+
+                # Выполнение действий после ожидания
+                if "shutdown_firefox" in actions:
+                    logging.info("[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Завершение процесса Firefox...")
+                    try:
+                        subprocess.run(["pkill", "-f", "firefox"], check=True)
+                        logging.info("[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Firefox успешно завершен.")
+                    except subprocess.CalledProcessError as e:
+                        logging.error(f"[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Ошибка завершения Firefox: {e}")
+
+                if "stop_dca" in actions:
+                    logging.info("[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Завершение процесса DCA...")
+                    try:
+                        subprocess.run(["pkill", "-f", "DCA"], check=True)
+                        logging.info("[RANDOM_WAIT_AND_SHUTDOWN_ACTION] DCA успешно завершен.")
+                    except subprocess.CalledProcessError as e:
+                        logging.error(f"[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Ошибка завершения DCA: {e}")
+
+                # Завершение текущего скрипта
+                logging.info("[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Завершаем все процессы. Скрипт завершится через 5 секунд...")
+                await asyncio.sleep(5)  # Небольшая задержка для логов
+                os._exit(0)  # Полное завершение Python-процесса и всех связанных задач
+            except Exception as e:
+                logging.error(f"[RANDOM_WAIT_AND_SHUTDOWN_ACTION] Ошибка: {e}")
+                os._exit(1)  # Завершение скрипта с ошибкой
+
+        # Запуск таймера в фоне
+        asyncio.create_task(run_timer())
+
+
+
 
 ############################ [START] Управление стримингами ############################
     async def do_nothing(self, params):

@@ -14,6 +14,15 @@
                     "params": {}
                 },
                 {
+                    "action": "random_wait_and_shutdown",
+                    "params": {
+                        "guaranteed_hours": 0,
+                        "guaranteed_minutes": 1,
+                        "randomization_range_minutes": 1,
+                        "actions": ["shutdown_firefox", "stop_dca"]
+                    }
+                },
+                {
                     "action": "make_firefox_focus",
                     "params": {}
                 },
