@@ -33,6 +33,7 @@ class ScriptActions:
         self.actions = {
             "log_message": self.log_message_action,
             "wait": self.wait_action,
+            "wait_interval": self.wait_interval_action,
             "capture_screen": self.capture_screen_action,
             "find_template": self.find_template_action,
             "click_template": self.click_template_action,
@@ -93,6 +94,31 @@ class ScriptActions:
             logging.info(f"[WAIT_ACTION] Задержка {randomized_duration:.2f} секунд "
                         f"(исходная {duration} секунд, рандомизация ±5%).")
             await asyncio.sleep(randomized_duration)  # Убедитесь, что sleep выполняется в правильном цикле
+            logging.info("[WAIT_ACTION] Задержка завершена.")
+        except asyncio.CancelledError:
+            logging.info("[WAIT_ACTION] Задержка отменена.")
+        except Exception as e:
+            logging.error(f"[WAIT_ACTION] Ошибка: {e}")
+    
+    async def wait_interval_action(self, params):
+        """
+        Выполняет задержку с возможностью указания диапазона задержки в минутах.
+        """
+        try:
+            min_minutes = params.get("min_minutes", 0)  # Минимальное значение в минутах
+            max_minutes = params.get("max_minutes", min_minutes)  # Максимальное значение в минутах (по умолчанию равно min_minutes)
+            randomization_percent = params.get("randomization_percent", 5)  # Процент рандомизации (по умолчанию ±5%)
+
+            # Генерация случайной задержки в диапазоне
+            base_duration = random.uniform(min_minutes, max_minutes) * 60  # Конвертируем минуты в секунды
+            random_offset = base_duration * (randomization_percent / 100)  # Вычисляем рандомный оффсет
+            randomized_duration = base_duration + random.uniform(-random_offset, random_offset)
+
+            logging.info(f"[WAIT_ACTION] Задержка {randomized_duration:.2f} секунд "
+                         f"(диапазон {min_minutes}-{max_minutes} минут, рандомизация ±{randomization_percent}%).")
+
+            # Выполнение задержки
+            await asyncio.sleep(randomized_duration)
             logging.info("[WAIT_ACTION] Задержка завершена.")
         except asyncio.CancelledError:
             logging.info("[WAIT_ACTION] Задержка отменена.")

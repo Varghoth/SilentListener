@@ -4,9 +4,11 @@
             "name": "Инициализация",
             "steps": [
                 {
-                    "action": "wait",
+                    "action": "wait_interval",
                     "params": {
-                        "duration": 5
+                        "min_minutes": 1, 
+                        "max_minutes": 3, 
+                        "randomization_percent": 5
                     }
                 },
                 {
