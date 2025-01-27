@@ -76,6 +76,25 @@ class TaskManager:
                     else:
                         logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
 
+            # Выполняем блок (Анализ)
+            init_block = next(
+                (block for block in script.get("blocks", []) if block.get("name") == "Анализ"),
+                None
+            )
+            if init_block:
+                logging.info("[TaskManager] Выполнение блока анализа.")
+                for step in init_block.get("steps", []):
+                    action_name = step.get("action")
+                    params = step.get("params", {})
+                    
+                    logging.info(f"[TaskManager] Выполнение действия: {action_name} с параметрами: {params}")
+                    action = self.actions.get_action(action_name)
+                    
+                    if action:
+                        await action(params)
+                    else:
+                        logging.warning(f"[TaskManager] Неизвестное действие: {action_name}")
+
 
             # Выполняем блок "Сбор плейлистов"
             playlist_block = next(

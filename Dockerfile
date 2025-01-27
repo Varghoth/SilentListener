@@ -31,6 +31,7 @@ RUN apt-get update && \
     tesseract-ocr \
     supervisor \
     nano \
+    xdotool \
     arc-theme && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

@@ -203,7 +203,7 @@ class ScriptActions:
             threshold = params.get("threshold", 0.9)
 
             # Путь к Firefox и профилю
-            firefox_dir = "/app/DCA/firefox"
+            firefox_dir = "/app/firefox"
             profile_dir = f"{firefox_dir}/profiles"
 
             # Убедимся, что каталог профилей существует
@@ -1008,11 +1008,15 @@ class ScriptActions:
                 # Задержка перед следующей попыткой
                 await asyncio.sleep(interval)
 
-            # Если темплейт не найден после трёх попыток, выполняем ctrl+r
+            # Если темплейт не найден после трёх попыток, выполняем ctrl+rs
             logging.info("[NO_INTERFACE_ERROR_ACTION] Темплейт 'no_interface_error' не найден. Обновляем страницу.")
             pyautogui.hotkey("ctrl", "r")
             logging.info("[NO_INTERFACE_ERROR_ACTION] Выполнена комбинация клавиш ctrl+r.")
 
+            await asyncio.sleep(interval)
+            await self.skip_ad_action(params)
+
+            await asyncio.sleep(interval)
             await self.skip_ad_action(params)
 
         except Exception as e:
@@ -1627,9 +1631,12 @@ class ScriptActions:
                 if not screen_service.interact_with_template("blncr_arrow.down", mouse_controller, threshold):
                     logging.error("[SAVE_PAGE_ACTION] Не удалось нажать на 'blncr_arrow.down'.")
                     return
-
+                
+                await asyncio.sleep(2)  # Задержка для загрузки
                 # Клавишу вверх для отображения всего списка
-                pyautogui.hotkey("up")
+                pyautogui.hotkey("down")
+                await asyncio.sleep(2)  # Задержка для загрузки
+                pyautogui.hotkey("down")
 
                 # Нажатие на 'blncr_textfiles'
                 if not screen_service.interact_with_template("blncr_textfiles", mouse_controller, threshold):

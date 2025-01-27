@@ -9,20 +9,39 @@
                         "duration": 5
                     }
                 },
-
-                                
-
                 {
                     "action": "generate_user_profile",
                     "params": {}
                 },
-
-
-                
                 {
                     "action": "make_firefox_focus",
                     "params": {}
                 },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 25
+                    }
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 15
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Анализ",
+            "steps": [
                 {
                     "action": "wait",
                     "params": {
@@ -34,13 +53,19 @@
                     "params": {}
                 },
                 {
+                    "action": "wait",
+                    "params": {
+                        "duration": 25
+                    }
+                },
+                {
                     "action": "save_page",
                     "params": {}
                 },
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 2
+                        "duration": 10
                     }
                 },
                 {
@@ -50,7 +75,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 2
+                        "duration": 10
                     }
                 },
                 {
@@ -85,6 +110,22 @@
                 {
                     "action": "playlist_collection_workflow", 
                     "params": {"wait_after_search": 4, "wait_after_albums": 2, "like_probability": 15}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "return_to_liked_music",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
                 }
             ]
         },
@@ -94,13 +135,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 2
-                    }
-                },
-                {
-                    "action": "wait",
-                    "params": {
-                        "duration": 1
+                        "duration": 3
                     }
                 },
                 {

@@ -11,15 +11,15 @@
         },
         "Extensions": {
             "Install": [
-                "/app/DCA/firefox/ads/canvasblocker-1.11.xpi",
-                "/app/DCA/firefox/ads/chameleon_ext-0.22.69.1.xpi",
-                "/app/DCA/firefox/ads/ublock_origin-1.62.0.xpi",
-                "/app/DCA/firefox/ads/browsec-3.88.3.xpi"
+                "/app/firefox/ads/canvasblocker-1.11.xpi",
+                "/app/firefox/ads/chameleon_ext-0.22.69.1.xpi",
+                "/app/firefox/ads/browsec-3.88.3.xpi",
+                "/app/firefox/ads/maximize_all_windows-0.1.3.xpi"
             ],
             "Locked": [
                 "CanvasBlocker@kkapsner.de",
-                "chameleon@sereneblue.github.io",
-                "uBlock0@raymondhill.net"
+                "{3579f63b-d8ee-424f-bbb6-6d0ce3285e6a}",
+                "{0fb9fbf9-ede1-415b-ace5-25b216f3c087}"
             ],
             "Update": false
         }
