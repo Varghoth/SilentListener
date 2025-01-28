@@ -1105,6 +1105,10 @@ class ScriptActions:
 
             # Если темплейт не найден после трёх попыток, выполняем ctrl+rs
             logging.info("[NO_INTERFACE_ERROR_ACTION] Темплейт 'no_interface_error' не найден. Обновляем страницу.")
+            
+            # 🔸 **Отправляем скриншот перед обновлением**
+            await self.tg_send_screen_notif({})
+            
             pyautogui.hotkey("ctrl", "r")
             logging.info("[NO_INTERFACE_ERROR_ACTION] Выполнена комбинация клавиш ctrl+r.")
 
@@ -1116,6 +1120,12 @@ class ScriptActions:
 
         except Exception as e:
             logging.error(f"[NO_INTERFACE_ERROR_ACTION] Ошибка: {e}")
+
+            # 🔹 **Отправляем сообщение об ошибке в Telegram**
+            await self.tg_send_err_notif(f"[NO_INTERFACE_ERROR_ACTION] Ошибка: {str(e)}")
+
+            # 🔹 **Отправляем скриншот с ошибкой**
+            await self.tg_send_screen_notif({})
 
 ############################ [END] Управление стримингами ############################
 

@@ -6,18 +6,14 @@
                 {
                     "action": "tg_send_err",
                     "params": {
-                        "error_message": "Ошибка соединения с БД"
+                        "error_message": "Ignition! 🔥"
                     }
-                },
-                {
-                    "action": "tg_send_screen",
-                    "params": {}
                 },
                 {
                     "action": "wait_interval",
                     "params": {
-                        "min_minutes": 1, 
-                        "max_minutes": 3, 
+                        "min_minutes": 5, 
+                        "max_minutes": 15, 
                         "randomization_percent": 5
                     }
                 },
@@ -28,9 +24,9 @@
                 {
                     "action": "random_wait_and_shutdown",
                     "params": {
-                        "guaranteed_hours": 0,
-                        "guaranteed_minutes": 1,
-                        "randomization_range_minutes": 1,
+                        "guaranteed_hours": 2,
+                        "guaranteed_minutes": 30,
+                        "randomization_range_minutes": 10,
                         "actions": ["shutdown_firefox", "stop_dca"]
                     }
                 },
