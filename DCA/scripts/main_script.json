@@ -4,9 +4,9 @@
             "name": "Инициализация",
             "steps": [
                 {
-                    "action": "tg_send_err",
+                    "action": "tg_msg",
                     "params": {
-                        "error_message": "Ignition! 🔥"
+                        "message": "Ignition! 🔥"
                     }
                 },
                 {
@@ -25,7 +25,7 @@
                     "action": "random_wait_and_shutdown",
                     "params": {
                         "guaranteed_hours": 1,
-                        "guaranteed_minutes": 30,
+                        "guaranteed_minutes": 0,
                         "randomization_range_minutes": 10,
                         "actions": ["shutdown_firefox", "stop_dca"]
                     }

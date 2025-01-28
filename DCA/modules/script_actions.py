@@ -89,6 +89,7 @@ class ScriptActions:
             ###################### Telegram Notifications ######################
             "tg_send_err": self.tg_send_err_notif,
             "tg_send_screen": self.tg_send_screen_notif,
+            "tg_msg": self.tg_msg_notif,
         }
 
     async def log_message_action(self, params):
@@ -1496,6 +1497,13 @@ class ScriptActions:
             # 7. Выбираем случайный альбом и запускаем его воспроизведение
             await self.select_random_album_action(params)
 
+            # 7.1. Включаем Shuffle с вероятностью 50%
+            if random.random() < 0.5:  # 50% вероятность
+                logging.info("[DEF_PLAYLIST_COLLECT] Включаем Shuffle (выбрано случайно).")
+                await self.set_shuffle_on_action(params)
+            else:
+                logging.info("[DEF_PLAYLIST_COLLECT] Shuffle пропущен (выбрано случайно).")
+
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
 
@@ -1539,6 +1547,13 @@ class ScriptActions:
             # 7. Выбираем случайный альбом и запускаем его воспроизведение
             await self.select_random_album_action(params)
 
+            # 7.1. Включаем Shuffle с вероятностью 50%
+            if random.random() < 0.5:  # 50% вероятность
+                logging.info("[OUR_PLAYLIST_COLLECT] Включаем Shuffle (выбрано случайно).")
+                await self.set_shuffle_on_action(params)
+            else:
+                logging.info("[OUR_PLAYLIST_COLLECT] Shuffle пропущен (выбрано случайно).")
+
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
 
@@ -1581,6 +1596,13 @@ class ScriptActions:
 
             # 7. Выбираем случайный альбом и запускаем его воспроизведение
             await self.select_random_album_action(params)
+
+            # 7.1. Включаем Shuffle с вероятностью 50%
+            if random.random() < 0.5:  # 50% вероятность
+                logging.info("[EXTERNAL_PLAYLIST_COLLECT] Включаем Shuffle (выбрано случайно).")
+                await self.set_shuffle_on_action(params)
+            else:
+                logging.info("[EXTERNAL_PLAYLIST_COLLECT] Shuffle пропущен (выбрано случайно).")
 
             # 8. Собираем треки из плейлиста
             await self.collect_playlist_tracks_action(params)
@@ -2157,5 +2179,33 @@ class ScriptActions:
 
         except Exception as e:
             logging.error(f"[SEND_SCREENSHOT_TELEGRAM] Ошибка: {e}")
+
+    async def tg_msg_notif(self, message="Уведомление от системы"):
+        """
+        Отправляет уведомление в Telegram напрямую через Bot API.
+        """
+        try:
+            # Получаем имя образа контейнера
+            container_name = await self.get_container_info()
+
+            # Формируем URL запроса к Telegram API
+            telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+            # Создаем payload с текстом сообщения и информацией о контейнере
+            payload = {
+                "chat_id": CHAT_ID,
+                "text": f"🐝 Уведомление:\n\nКонтейнер: {container_name}\nСообщение: {message}"
+            }
+
+            # Отправляем POST-запрос
+            response = requests.post(telegram_api_url, json=payload)
+
+            # Проверяем ответ сервера
+            if response.ok:
+                logging.info("[TG_SEND_NOTIF] Уведомление успешно отправлено в Telegram.")
+            else:
+                logging.error(f"[TG_SEND_NOTIF] Ошибка при отправке в Telegram: {response.status_code} - {response.text}")
+        except Exception as e:
+            logging.error(f"[TG_SEND_NOTIF] Ошибка соединения с Telegram API: {e}")
 
 ############################ [-END-] Telegram Notifications ############################
