@@ -1,3 +1,44 @@
+
+#Запуск с подкл. сокета: позволяет получчать
+#пользовательское имя конта
+docker run -d -p 5903:5901 --name test_dca_210125 -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
+
+# Часовые пояса
+docker run -d -p 5903:5901 --name test_dca_singapore -e TZ=Asia/Singapore -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
+
+docker run -d -p 5904:5901 --name test_dca_london -e TZ=Europe/London -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
+
+docker run -d -p 5905:5901 --name test_dca_newyork -e TZ=America/New_York -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
+
+#Catalog
+cd C:\Users\VARGHOTH\OneDrive\Desktop\COD\SilentListener\docker-linux-vnc
+
+#Копирование DCA в конт
+docker cp DCA dca_container:/app/DCA
+docker cp librewolf test_dca_210125:/app
+
+docker cp DCA test_dca_210125:/app
+docker cp firefox test_dca_210125:/app
+
+# RESTART
+docker restart dca_container
+docker restart test_kont
+docker restart test_dca_210125
+
+#Вход в консоль конта
+docker exec -it dca_container bash
+docker exec -it test_kont bash
+docker exec -it test_dca_210125 bash
+
+#Запуск приложения
+python3 app/DCA/agent.py
+python3 agent.py
+
+#librewolf run
+/app/librewolf/AppRun
+
+#################################################################
+
 #Сборка
 docker build -t test_kont .
 

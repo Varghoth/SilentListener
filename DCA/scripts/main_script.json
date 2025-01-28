@@ -12,8 +12,8 @@
                 {
                     "action": "wait_interval",
                     "params": {
-                        "min_minutes": 5, 
-                        "max_minutes": 15, 
+                        "min_minutes": 1, 
+                        "max_minutes": 3, 
                         "randomization_percent": 5
                     }
                 },
@@ -24,7 +24,7 @@
                 {
                     "action": "random_wait_and_shutdown",
                     "params": {
-                        "guaranteed_hours": 2,
+                        "guaranteed_hours": 1,
                         "guaranteed_minutes": 30,
                         "randomization_range_minutes": 10,
                         "actions": ["shutdown_firefox", "stop_dca"]

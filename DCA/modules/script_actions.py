@@ -1737,11 +1737,12 @@ class ScriptActions:
                     logging.error("[SAVE_PAGE_ACTION] Не удалось нажать на 'blncr_arrow.down'.")
                     return
                 
-                await asyncio.sleep(2)  # Задержка для загрузки
-                # Клавишу вверх для отображения всего списка
-                pyautogui.hotkey("down")
-                await asyncio.sleep(2)  # Задержка для загрузки
-                pyautogui.hotkey("down")
+                await asyncio.sleep(5)  # Задержка для загрузки
+                # Клавишу вниз для отображения всего списка
+                # Прокрутка вниз 5 раз с задержкой
+                for _ in range(5):
+                    pyautogui.hotkey("down")
+                    await asyncio.sleep(2)  # Задержка для загрузки
 
                 # Нажатие на 'blncr_textfiles'
                 if not screen_service.interact_with_template("blncr_textfiles", mouse_controller, threshold):
