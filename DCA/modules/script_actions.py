@@ -5,6 +5,8 @@ import telebot
 import pyautogui
 import tempfile
 import requests
+import docker
+import socket
 import json
 import time
 import cv2
@@ -2060,18 +2062,36 @@ class ScriptActions:
 ############################ [-END-] Fingerprint ############################
 
 ############################ [START] Telegram Notifications ############################
+
+    async def get_container_info(self):
+        """
+        Получает имя образа контейнера.
+        """
+        try:
+            client = docker.from_env()
+            container_id = socket.gethostname()
+            container = client.containers.get(container_id)
+            image_name = container.image.tags[0] if container.image.tags else "unknown"
+            return image_name
+        except Exception as e:
+            logging.error(f"[GET_CONTAINER_INFO] Ошибка получения информации о контейнере: {e}")
+            return "unknown"
+
     async def tg_send_err_notif(self, error_message="Произошла ошибка"):
         """
         Отправляет уведомление об ошибке в Telegram напрямую через Bot API.
         """
         try:
+            # Получаем имя образа контейнера
+            container_name = await self.get_container_info()
+
             # Формируем URL запроса к Telegram API
             telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-            
-            # Создаем payload с текстом ошибки
+
+            # Создаем payload с текстом ошибки и информацией о контейнере
             payload = {
                 "chat_id": CHAT_ID,
-                "text": f"⚠️ Ошибка в системе!\n\n{error_message}"
+                "text": f"⚠️ Ошибка в системе!\n\nКонтейнер: {container_name}\nОшибка: {error_message}"
             }
 
             # Отправляем POST-запрос
@@ -2088,7 +2108,6 @@ class ScriptActions:
     async def tg_send_screen_notif(self, params):
         """
         Делает скриншот экрана и отправляет его в Telegram.
-        :param params: Не требуется.
         """
         try:
             logging.info("[SEND_SCREENSHOT_TELEGRAM] Начинаем захват экрана.")
@@ -2103,10 +2122,16 @@ class ScriptActions:
 
             logging.info(f"[SEND_SCREENSHOT_TELEGRAM] Скриншот сохранён: {screenshot_path}")
 
+            # Получаем имя образа контейнера
+            container_name = await self.get_container_info()
+
             # Отправляем файл в Telegram
             telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
             with open(screenshot_path, "rb") as img:
-                payload = {"chat_id": CHAT_ID}
+                payload = {
+                    "chat_id": CHAT_ID,
+                    "caption": f"📸 Скриншот из контейнера: {container_name}"
+                }
                 response = requests.post(telegram_api_url, data=payload, files={"photo": img})
 
             # Проверяем результат отправки

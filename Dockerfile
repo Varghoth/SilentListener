@@ -49,6 +49,7 @@ RUN apt-get update && \
         playwright \
         requests \
         telebot \
+        docker \
         opencv-python-headless
 
     # Установка PyQt5 через apt и pip
