@@ -1,7 +1,10 @@
 import subprocess
 import logging
 import asyncio
+import telebot
 import pyautogui
+import tempfile
+import requests
 import json
 import time
 import cv2
@@ -25,6 +28,11 @@ FIREFOX_EXTENSIONS_DIR = "/root/.mozilla/firefox/*.default-release/extensions"  
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
+
+# For Telegram
+BOT_TOKEN = "7730798555:AAFcDJ1Zd8G7sKo5xurZ0XQbmYyHhM9Vhz4"
+CHAT_ID = "72445112"
+SERVER_URL = "https://us-central1-goldenhive-449118.cloudfunctions.net/goldenhive-449118"
 
 class ScriptActions:
     def __init__(self, loop):
@@ -76,6 +84,9 @@ class ScriptActions:
             "playlist_collection_workflow": self.playlist_collection_workflow,
             ###################### Fingerprint ######################
             "generate_user_profile": self.generate_user_profile_action,
+            ###################### Telegram Notifications ######################
+            "tg_send_err": self.tg_send_err_notif,
+            "tg_send_screen": self.tg_send_screen_notif,
         }
 
     async def log_message_action(self, params):
@@ -357,9 +368,6 @@ class ScriptActions:
 
         # Запуск таймера в фоне
         asyncio.create_task(run_timer())
-
-
-
 
 ############################ [START] Управление стримингами ############################
     async def do_nothing(self, params):
@@ -2050,3 +2058,68 @@ class ScriptActions:
             logging.error(f"Ошибка при обработке профиля: {e}")
 
 ############################ [-END-] Fingerprint ############################
+
+############################ [START] Telegram Notifications ############################
+    async def tg_send_err_notif(self, error_message="Произошла ошибка"):
+        """
+        Отправляет уведомление об ошибке в Telegram напрямую через Bot API.
+        """
+        try:
+            # Формируем URL запроса к Telegram API
+            telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+            
+            # Создаем payload с текстом ошибки
+            payload = {
+                "chat_id": CHAT_ID,
+                "text": f"⚠️ Ошибка в системе!\n\n{error_message}"
+            }
+
+            # Отправляем POST-запрос
+            response = requests.post(telegram_api_url, json=payload)
+
+            # Проверяем ответ сервера
+            if response.ok:
+                logging.info("[TG_SEND_ERR] Ошибка успешно отправлена в Telegram.")
+            else:
+                logging.error(f"[TG_SEND_ERR] Ошибка при отправке в Telegram: {response.status_code} - {response.text}")
+        except Exception as e:
+            logging.error(f"[TG_SEND_ERR] Ошибка соединения с Telegram API: {e}")
+
+    async def tg_send_screen_notif(self, params):
+        """
+        Делает скриншот экрана и отправляет его в Telegram.
+        :param params: Не требуется.
+        """
+        try:
+            logging.info("[SEND_SCREENSHOT_TELEGRAM] Начинаем захват экрана.")
+
+            # Делаем скриншот
+            screenshot = pyautogui.screenshot()
+
+            # Сохраняем во временный файл
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+                screenshot_path = temp_file.name
+                screenshot.save(screenshot_path)
+
+            logging.info(f"[SEND_SCREENSHOT_TELEGRAM] Скриншот сохранён: {screenshot_path}")
+
+            # Отправляем файл в Telegram
+            telegram_api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+            with open(screenshot_path, "rb") as img:
+                payload = {"chat_id": CHAT_ID}
+                response = requests.post(telegram_api_url, data=payload, files={"photo": img})
+
+            # Проверяем результат отправки
+            if response.ok:
+                logging.info("[SEND_SCREENSHOT_TELEGRAM] Скриншот успешно отправлен в Telegram.")
+            else:
+                logging.error(f"[SEND_SCREENSHOT_TELEGRAM] Ошибка отправки: {response.status_code} - {response.text}")
+
+            # Удаляем временный файл
+            os.remove(screenshot_path)
+            logging.info("[SEND_SCREENSHOT_TELEGRAM] Временный файл удалён.")
+
+        except Exception as e:
+            logging.error(f"[SEND_SCREENSHOT_TELEGRAM] Ошибка: {e}")
+
+############################ [-END-] Telegram Notifications ############################

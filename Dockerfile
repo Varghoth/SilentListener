@@ -47,6 +47,8 @@ RUN apt-get update && \
         qasync \
         pytesseract \
         playwright \
+        requests \
+        telebot \
         opencv-python-headless
 
     # Установка PyQt5 через apt и pip
@@ -70,6 +72,12 @@ RUN apt-get update && \
 # Копируем директорию DCA в контейнер
 COPY DCA /app/DCA
 WORKDIR /app/DCA
+############################# [END] Установка DCA #############################
+
+############################# [START] Copy Firefox #############################
+# Копируем директорию Firefox в контейнер
+COPY firefox /app/firefox
+WORKDIR /app/firefox
 ############################# [END] Установка DCA #############################
 
 # Сжатие памяти

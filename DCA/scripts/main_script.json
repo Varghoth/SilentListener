@@ -4,6 +4,16 @@
             "name": "Инициализация",
             "steps": [
                 {
+                    "action": "tg_send_err",
+                    "params": {
+                        "error_message": "Ошибка соединения с БД"
+                    }
+                },
+                {
+                    "action": "tg_send_screen",
+                    "params": {}
+                },
+                {
                     "action": "wait_interval",
                     "params": {
                         "min_minutes": 1, 
