@@ -1088,7 +1088,7 @@ class ScriptActions:
         try:
             threshold = params.get("threshold", 0.75)  # Порог совпадения по умолчанию
             max_attempts = 3  # Максимальное количество попыток
-            interval = 3  # Интервал между попытками в секундах
+            interval = 5  # Интервал между попытками в секундах
 
             logging.info("[NO_INTERFACE_ERROR_ACTION] Начало выполнения.")
             screen_service = ScreenService()
@@ -1113,11 +1113,18 @@ class ScriptActions:
             pyautogui.hotkey("ctrl", "r")
             logging.info("[NO_INTERFACE_ERROR_ACTION] Выполнена комбинация клавиш ctrl+r.")
 
-            await asyncio.sleep(interval)
+            await asyncio.sleep(15)
             await self.skip_ad_action(params)
 
-            await asyncio.sleep(interval)
+            await asyncio.sleep(15)
             await self.skip_ad_action(params)
+
+            # Возвращаемся к плейлисту Liked Music
+            await self.return_to_liked_music_action(params)
+
+            # 🔸 **Отправляем скриншот, чтобы понять, устранена ли ошибка**
+            await asyncio.sleep(5)
+            await self.tg_send_screen_notif({})
 
         except Exception as e:
             logging.error(f"[NO_INTERFACE_ERROR_ACTION] Ошибка: {e}")

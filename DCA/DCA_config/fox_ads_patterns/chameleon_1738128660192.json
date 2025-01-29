@@ -41,7 +41,7 @@
     },
     "protectWinName": true,
     "resistFingerprinting": true,
-    "screenSize": "1920x1200",
+    "screenSize": "1920x1080",
     "spoofAudioContext": true,
     "spoofClientRects": true,
     "spoofFontFingerprint": true,
@@ -52,7 +52,7 @@
     "webSockets": "allow_all"
   },
   "profile": {
-    "selected": "win4-esr",
+    "selected": "win4-ff",
     "interval": {
       "option": 0,
       "min": 1,

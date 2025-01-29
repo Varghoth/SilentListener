@@ -12,8 +12,8 @@
                 {
                     "action": "wait_interval",
                     "params": {
-                        "min_minutes": 0.1, 
-                        "max_minutes": 0.25, 
+                        "min_minutes": 1, 
+                        "max_minutes": 1, 
                         "randomization_percent": 5
                     }
                 },
@@ -47,7 +47,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 25
+                        "duration": 45
                     }
                 },
                 {
@@ -57,7 +57,7 @@
                 {
                     "action": "wait",
                     "params": {
-                        "duration": 30
+                        "duration": 60
                     }
                 },
                 {

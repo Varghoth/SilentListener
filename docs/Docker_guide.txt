@@ -10,6 +10,18 @@ docker run -d -p 5904:5901 --name test_dca_london -e TZ=Europe/London -v //var/r
 
 docker run -d -p 5905:5901 --name test_dca_newyork -e TZ=America/New_York -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
 
+
+# Push to DockerHub
+    #Login
+    docker login
+
+        #Build
+        docker build -t vargoth/honeyhive:bee-0-290125 .
+
+            #Push
+            docker push vargoth/honeyhive:bee-0-290125
+
+
 #Catalog
 cd C:\Users\VARGHOTH\OneDrive\Desktop\COD\SilentListener\docker-linux-vnc
 
