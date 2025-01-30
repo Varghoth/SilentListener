@@ -17,9 +17,13 @@ docker run -d -p 5905:5901 --name test_dca_newyork -e TZ=America/New_York -v //v
 
         #Build
         docker build -t vargoth/honeyhive:bee-0-290125 .
+        or
+        docker build -t vargoth/honeyhive:bee-0-300125 .
 
             #Push
             docker push vargoth/honeyhive:bee-0-290125
+            or
+            docker push vargoth/honeyhive:bee-0-300125
 
 
 #Catalog
@@ -33,18 +37,19 @@ docker cp DCA test_dca_210125:/app
 docker cp firefox test_dca_210125:/app
 
 # RESTART
-docker restart dca_container
-docker restart test_kont
-docker restart test_dca_210125
+    docker restart dca_container
+    docker restart test_kont
+    docker restart test_dca_210125
 
 #Вход в консоль конта
 docker exec -it dca_container bash
-docker exec -it test_kont bash
 docker exec -it test_dca_210125 bash
+    docker exec -it test_kont bash
+
 
 #Запуск приложения
-python3 app/DCA/agent.py
-python3 agent.py
+    python3 app/DCA/agent.py
+    python3 agent.py
 
 #librewolf run
 /app/librewolf/AppRun

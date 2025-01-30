@@ -12,8 +12,8 @@
                 {
                     "action": "wait_interval",
                     "params": {
-                        "min_minutes": 1, 
-                        "max_minutes": 25, 
+                        "min_minutes": 1,
+                        "max_minutes": 25,
                         "randomization_percent": 5
                     }
                 },

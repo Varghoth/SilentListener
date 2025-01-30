@@ -714,6 +714,27 @@ class ScriptActions:
         except Exception as e:
             logging.error(f"[SET_STREAMING_LIKE_ACTION] Ошибка: {e}")
     
+    async def click_leave_page_action(self, params):
+        """
+        Нажимает кнопку "leave_page".
+        Проверяет наличие темплейта "check_leave_page" и кликает по нему, если найден.
+        :param params: Параметры действия (например, "threshold").
+        """
+        try:
+            threshold = params.get("threshold", 0.9)
+
+            logging.info("[CLICK_LEAVE_PAGE] Ищем кнопку 'leave_page'.")
+            screen_service = ScreenService()
+            mouse_controller = MouseController(self.project_dir)
+
+            if screen_service.is_template_on_screen("check_leave_page", threshold):
+                logging.info("[CLICK_LEAVE_PAGE] Кнопка 'leave_page' найдена. Выполняем клик.")
+                screen_service.interact_with_template("check_leave_page", mouse_controller, threshold)
+            else:
+                logging.error("[CLICK_LEAVE_PAGE] Кнопка 'leave_page' не найдена. Проверьте шаблоны.")
+        except Exception as e:
+            logging.error(f"[CLICK_LEAVE_PAGE] Ошибка: {e}")
+            
     async def skip_ad_action(self, params):
         """
         Выполняет действия для исправления ошибок (например, пропуска рекламы).
@@ -721,6 +742,10 @@ class ScriptActions:
         Если найдена, нажимает на нее.
         :param params: Параметры действия (например, "threshold").
         """
+
+        # Сначала ищем темплейт "check_leave_page", что позволит решить проблему с обновлением страницы. 
+        await self.click_leave_page_action()
+
         try:
             threshold = params.get("threshold", 0.75)  # Порог совпадения
             logging.info("[ERROR_CORRECTION_ACTION] Проверяем наличие кнопки 'Skip'.")
@@ -1112,6 +1137,9 @@ class ScriptActions:
             
             pyautogui.hotkey("ctrl", "r")
             logging.info("[NO_INTERFACE_ERROR_ACTION] Выполнена комбинация клавиш ctrl+r.")
+            
+            await asyncio.sleep(5)
+            pyautogui.hotkey("enter")
 
             await asyncio.sleep(15)
             await self.skip_ad_action(params)
