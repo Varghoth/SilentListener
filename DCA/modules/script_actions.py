@@ -744,7 +744,7 @@ class ScriptActions:
         """
 
         # Сначала ищем темплейт "check_leave_page", что позволит решить проблему с обновлением страницы. 
-        await self.click_leave_page_action()
+        await self.click_leave_page_action({})
 
         try:
             threshold = params.get("threshold", 0.75)  # Порог совпадения
