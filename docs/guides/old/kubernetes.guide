@@ -1,0 +1,26 @@
+NEED:
+
+1. K9s terminal
+How install:
+    1.1. install SCOOP by powershell (not admin!) >>>
+            
+            Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+            Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+
+    1.2. install K9s by SCOOP >>>
+
+            scoop install k9s
+
+            Check install:
+
+                k9s version
+
+    1.3. Set Enable Kubernetes > Kubeadm in Docker.Desktop
+
+2. Temporary port-forwarding:
+
+        exmp:
+                kubectl port-forward deployment/bee-matus-ny-05001 5001:5901
+
+                VARGOTH-HIVE:
+                kubectl port-forward deployment/bee-vargoth-ny-05001 5001:5901

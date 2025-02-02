@@ -1,0 +1,30 @@
+1. Create VOLUME:
+
+    docker volume create portainer_data
+
+2. Install Cont:
+
+    docker run -d -p 8000:8000 -p 9443:9443 --name=portainer --restart=always -v //var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
+
+3. HTTPS: https://localhost:9443
+    HTTP (если использовали порт 9000): http://localhost:9000
+
+4. PASS
+    Log:  admin
+    Pass: 4Vad0n9979//
+
+        ctrl: 4Vad0n9979//
+
+5. Init SWARM
+
+    docker swarm init
+
+    Expected result:
+
+        Swarm initialized: current node (zq8bnpuaxmqmhfxyauw8iyeui) is now a manager.    
+        To add a worker to this swarm, run the following command:
+
+            docker swarm join --token SWMTKN-1-2u8rc9skl1dbu3jstha9rczpo1pjjz8wlu8yn8hnxrd7htphps-c1qjl3xmsy83lqhjyti5ijbq3 192.168.65.3:2377
+
+        To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+

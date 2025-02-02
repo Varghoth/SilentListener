@@ -1,0 +1,251 @@
+{
+    "blocks": [
+        {
+            "name": "Инициализация",
+            "steps": [
+                {
+                    "action": "tg_msg",
+                    "params": {
+                        "message": "Ignition! 🔥"
+                    }
+                },
+                {
+                    "action": "wait_interval",
+                    "params": {
+                        "min_minutes": 0,
+                        "max_minutes": 0,
+                        "randomization_percent": 5
+                    }
+                },
+                {
+                    "action": "generate_user_profile",
+                    "params": {}
+                },
+                {
+                    "action": "random_wait_and_shutdown",
+                    "params": {
+                        "guaranteed_hours": 7,
+                        "guaranteed_minutes": 30,
+                        "randomization_range_minutes": 10,
+                        "actions": ["shutdown_firefox", "stop_dca"]
+                    }
+                },
+                {
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "return_to_liked_music",
+                    "params": {}
+                },
+                {
+                    "action": "no_interface_error",
+                    "params": {}
+                },
+                {
+                    "action": "tg_send_screen",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Анализ",
+            "steps": [
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "save_page",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "parse_liked_tracks",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "set_streaming_play",
+                    "params": {}
+                },
+                {
+                    "action": "set_streaming_unfold",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Сбор плейлистов",
+            "steps": [
+                {
+                    "action": "playlist_collection_workflow", 
+                    "params": {"wait_after_search": 4, "wait_after_albums": 2, "like_probability": 15}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                },
+                {
+                    "action": "return_to_liked_music",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 1
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Основной цикл работы",
+            "steps": [
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 3
+                    }
+                },
+                {
+                    "action": "make_firefox_focus",
+                    "params": {}
+                },
+                {
+                    "action": "select_youtube_tab",
+                    "params": {}
+                },
+                {
+                    "action": "skip_ad",
+                    "params": {}
+                },
+                {
+                    "action": "no_interface_error",
+                    "params": {}
+                },
+                {
+                    "action": "random_play",
+                    "params": {}
+                },
+                {
+                    "action": "set_streaming_unfold",
+                    "params": {}
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 2
+                    }
+                },
+                {
+                    "action": "log_message",
+                    "params": {
+                        "message": "Симуляция случайного действия"
+                    }
+                },
+                {
+                    "action": "random_action",
+                    "params": {
+                        "probabilities": {
+                            "do_nothing": 90,
+                            "set_streaming_play": 5,
+                            "set_streaming_pause": 5,
+                            "set_streaming_forward": 3,
+                            "set_streaming_backward": 2,
+                            "scroll_and_click": 2,
+                            "set_cycle_on": 5,
+                            "set_cycle_off": 1,
+                            "set_shuffle_on": 3,
+                            "set_shuffle_off": 3,
+                            "set_streaming_fold": 1,
+                            "fast_scroll_up_and_click": 2
+                        }
+                    }
+                },
+                {
+                    "action": "wait",
+                    "params": {
+                        "duration": 300,
+                        "random_offset": 60
+                    }
+                }
+            ]
+        }
+    ]
+}

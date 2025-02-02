@@ -1232,7 +1232,7 @@ class ScriptActions:
         """
         try:
             # Определяем каталог для хранения конфигов и белых списков
-            configs_dir = os.path.join(self.project_dir, "configs")
+            configs_dir = os.path.join(self.project_dir, "/app/DCA/configs")
             white_list_file = os.path.join(configs_dir, "white_list.json")
             ideal_balance_file = os.path.join(configs_dir, "ideal_balance.json")
             config_file = os.path.join(configs_dir, "playlist_config.json")
@@ -1517,7 +1517,6 @@ class ScriptActions:
             await self.click_search_action(params)
 
             # 3. Выбираем случайного артиста и вводим его в строку поиска
-            #await self.select_artist_action({})
             await self.select_artist_action({})
 
             # 4. Ждем загрузки результатов поиска
@@ -1614,7 +1613,7 @@ class ScriptActions:
             # 2. Нажимаем на кнопку поиска
             await self.click_search_action(params)
 
-            # 3. Выбираем нашего артиста и вводим его в строку поиска
+            # 3. Выбираем внешнего артиста и вводим его в строку поиска
             await self.select_artist_action({
                 "our_artist_weight": 0,
                 "external_artist_weight": 100
@@ -2132,18 +2131,15 @@ class ScriptActions:
 ############################ [START] Telegram Notifications ############################
 
     async def get_container_info(self):
-        """
-        Получает имя образа контейнера.
-        """
         try:
-            client = docker.from_env()
-            container_id = socket.gethostname()
-            container = client.containers.get(container_id)
-            image_name = container.image.tags[0] if container.image.tags else "unknown"
-            return image_name
+            container_name = os.getenv("CONTAINER_NAME")
+            if not container_name or container_name.lower() == "unknown":
+                container_name = socket.gethostname()
+            return container_name
         except Exception as e:
-            logging.error(f"[GET_CONTAINER_INFO] Ошибка получения информации о контейнере: {e}")
+            logging.error(f"[GET_CONTAINER_INFO] Ошибка: {e}")
             return "unknown"
+
 
     async def tg_send_err_notif(self, error_message="Произошла ошибка"):
         """

@@ -1,5 +1,24 @@
 
-#Запуск с подкл. сокета: позволяет получчать
+
+
+
+
+
+
+
+
+
+02022025: Команда с фиксацией порта и автоматическим рестартом:
+
+docker run -d --restart unless-stopped -p 5001:5901 `
+  --name bee-matus-ny-05001 --hostname bee-matus-ny-05001 `
+  -e TZ=America/New_York `
+  -v /var/run/docker.sock:/var/run/docker.sock `
+  vargoth/honeyhive:bee-0-300125
+
+
+
+#Запуск с подкл. сокета: позволяет получать
 #пользовательское имя конта
 docker run -d -p 5903:5901 --name test_dca_210125 -v //var/run/docker.sock:/var/run/docker.sock test_dca_210125
 
@@ -41,10 +60,14 @@ docker cp firefox test_dca_210125:/app
     docker restart test_kont
     docker restart test_dca_210125
 
+    docker cp DCA bee-matus-ny-05001:/app/DCA
+
 #Вход в консоль конта
 docker exec -it dca_container bash
 docker exec -it test_dca_210125 bash
     docker exec -it test_kont bash
+
+    docker exec -it bee-matus-ny-05001 bash
 
 
 #Запуск приложения
