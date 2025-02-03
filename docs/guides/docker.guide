@@ -4,17 +4,24 @@
 
 
 
-
-
-
-
 02022025: Команда с фиксацией порта и автоматическим рестартом:
-
+EXAMPLE:
 docker run -d --restart unless-stopped -p 5001:5901 `
   --name bee-matus-ny-05001 --hostname bee-matus-ny-05001 `
   -e TZ=America/New_York `
   -v /var/run/docker.sock:/var/run/docker.sock `
-  vargoth/honeyhive:bee-0-300125
+  vargoth/honeyhive:bee-0-020225
+
+
+WORK:
+docker run -d --restart unless-stopped -p 5002:5901 `
+  --name bee-matus-ny-05002 --hostname bee-matus-ny-05002 `
+  -e TZ=America/New_York `
+  -v /var/run/docker.sock:/var/run/docker.sock `
+  vargoth/honeyhive:bee-0-020225
+
+
+
 
 
 
@@ -43,7 +50,8 @@ docker run -d -p 5905:5901 --name test_dca_newyork -e TZ=America/New_York -v //v
             docker push vargoth/honeyhive:bee-0-290125
             or
             docker push vargoth/honeyhive:bee-0-300125
-
+            or
+            docker push vargoth/honeyhive:bee-0-020225
 
 #Catalog
 cd C:\Users\VARGHOTH\OneDrive\Desktop\COD\SilentListener\docker-linux-vnc
