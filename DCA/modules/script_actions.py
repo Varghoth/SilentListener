@@ -381,39 +381,53 @@ class ScriptActions:
         """
         Устанавливает режим воспроизведения музыки (Play).
         Проверяет наличие темплейта "pause". Если он есть, воспроизведение уже запущено.
-        Если "pause" не найден, нажимает на кнопку "play" и проверяет ещё раз.
+        Если "pause" не найден, пытается выполнить клик по кнопке "play" до 3 раз.
+        Если после 3 попыток шаблон "pause" всё ещё не появляется,
+        выполняется комбинация клавиш Ctrl+R, затем Enter с задержками.
         :param params: Параметры действия (например, "threshold").
         """
         try:
             threshold = params.get("threshold", 0.9)
-
-            # Проверяем наличие темплейта pause (музыка воспроизводится)
             logging.info("[SET_STREAMING_PLAY_ACTION] Проверяем, воспроизводится ли музыка.")
             screen_service = ScreenService()
             mouse_controller = MouseController(self.project_dir)
 
-            if screen_service.is_template_on_screen("pause", threshold):
-                logging.info("[SET_STREAMING_PLAY_ACTION] Музыка уже воспроизводится. Действия не требуются.")
-                return
-
-            # Если музыка не воспроизводится, ищем кнопку play
-            logging.info("[SET_STREAMING_PLAY_ACTION] Музыка не воспроизводится. Ищем кнопку 'play'.")
-            if screen_service.is_template_on_screen("play", threshold):
-                logging.info("[SET_STREAMING_PLAY_ACTION] Кнопка 'play' найдена. Выполняем клик.")
-                screen_service.interact_with_template("play", mouse_controller, threshold)
-
-                # Небольшая задержка после нажатия play
-                await asyncio.sleep(2)
-
-                # Повторно проверяем наличие темплейта pause
+            max_attempts = 3
+            attempt = 0
+            while attempt < max_attempts:
                 if screen_service.is_template_on_screen("pause", threshold):
-                    logging.info("[SET_STREAMING_PLAY_ACTION] Музыка успешно запущена.")
+                    logging.info("[SET_STREAMING_PLAY_ACTION] Музыка уже воспроизводится. Действия не требуются.")
+                    return
+
+                # Пытаемся найти кнопку play и нажать её
+                if screen_service.is_template_on_screen("play", threshold):
+                    logging.info(f"[SET_STREAMING_PLAY_ACTION] Попытка {attempt + 1}: Кнопка 'play' найдена. Выполняем клик.")
+                    screen_service.interact_with_template("play", mouse_controller, threshold)
+                    await asyncio.sleep(2)  # Задержка после клика
+
+                    if screen_service.is_template_on_screen("pause", threshold):
+                        logging.info("[SET_STREAMING_PLAY_ACTION] Музыка успешно запущена.")
+                        return
+                    else:
+                        logging.error(f"[SET_STREAMING_PLAY_ACTION] Попытка {attempt + 1}: Музыка не запустилась после клика.")
                 else:
-                    logging.error("[SET_STREAMING_PLAY_ACTION] Музыка не запустилась. Проверьте шаблоны или приложение.")
-            else:
-                logging.error("[SET_STREAMING_PLAY_ACTION] Кнопка 'play' не найдена. Проверьте шаблоны.")
+                    logging.error(f"[SET_STREAMING_PLAY_ACTION] Попытка {attempt + 1}: Кнопка 'play' не найдена.")
+                
+                attempt += 1
+                await asyncio.sleep(1)  # Небольшая задержка между попытками
+
+            # Если после трёх попыток музыка не запущена, выполняем fallback
+            logging.info("[SET_STREAMING_PLAY_ACTION] 3 попытки не увенчались успехом, выполняем fallback (Ctrl+R и Enter).")
+            pyautogui.hotkey("ctrl", "r")
+            logging.info("[SET_STREAMING_PLAY_ACTION] Выполнена комбинация клавиш Ctrl+R.")
+            await asyncio.sleep(5)
+            pyautogui.hotkey("enter")
+            logging.info("[SET_STREAMING_PLAY_ACTION] Выполнена клавиша Enter.")
+            await asyncio.sleep(15)
+
         except Exception as e:
             logging.error(f"[SET_STREAMING_PLAY_ACTION] Ошибка: {e}")
+
 
     async def random_play_action(self, params):
         """
